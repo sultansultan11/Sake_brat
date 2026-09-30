@@ -31,7 +31,18 @@ Qo'shimcha:
   tushganda raqamlar yana `001` dan boshlanib, admin chatida takrorlanmasligi
   uchun kerak. Uni o'chirish mumkin: `.env` da `COUNTER_FILE=` (bo'sh) yozing.
 
-## O'rnatish va ishga tushirish
+## Eng oson yo'l: Windows kompyuterda
+
+1. [python.org/downloads](https://www.python.org/downloads/) dan Python'ni o'rnating.
+   Birinchi oynada **"Add python.exe to PATH"** belgisini qo'ying.
+2. Loyihani ZIP qilib yuklab oling va **"Extract All" (Hammasini chiqarish)** bilan oching.
+3. Papkadagi **`start.bat`** faylini ikki marta bosing. Birinchi marta u token va
+   admin ID'ni so'raydi, kutubxonalarni o'rnatadi va botni ishga tushiradi.
+   Keyingi safar darhol ishga tushadi.
+
+Oyna ochiq turguncha bot ishlaydi; oynani yopsangiz, bot to'xtaydi.
+
+## O'rnatish va ishga tushirish (qo'lda, istalgan OS)
 
 **1. Bot yaratish.** Telegram'da [@BotFather](https://t.me/BotFather) → `/newbot` → token oling.
 
@@ -86,6 +97,7 @@ Telegram `Conflict: terminated by other getUpdates request` xatosini beradi.
 ## Loyiha tuzilishi
 
 ```
+start.bat            — Windows uchun bir bosishda ishga tushirish
 main.py              — kirish nuqtasi: Application, long-polling, bot buyruqlari
 config.py            — .env dan sozlamalarni o'qish va tekshirish
 messages.py          — barcha o'zbekcha matnlar, klinika ma'lumotlari, FAQ

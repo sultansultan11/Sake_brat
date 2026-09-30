@@ -1,0 +1,2 @@
+# Windows .bat fayllari CRLF bilan saqlanadi (cmd.exe LF bilan xato ishlaydi)
+*.bat -text
