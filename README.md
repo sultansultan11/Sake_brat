@@ -61,7 +61,14 @@ email orqali bog'laning.
    admin ID'ni so'raydi, kutubxonalarni o'rnatadi va botni ishga tushiradi.
    Keyingi safar darhol ishga tushadi.
 
-**Yangilash:** botni yoping, yangi ZIP'ni oching, eski papkadan `.env` va
+**Fonda (oynasiz) ishlatish:** `start.bat` bir marta ishlagandan so'ng
+**`start_hidden.vbs`** ni bosing — bot oynasiz ishlaydi, to'xtatish uchun
+**`stop.bat`**. Kompyuter yoqilganda avtomatik ishga tushishi uchun
+`start_hidden.vbs` yorlig'ini **Win+R → `shell:startup`** papkasiga qo'ying.
+Fonda xatolar `bot.log` fayliga yoziladi. Bot bir kompyuterda ikki marta ishga
+tushmaydi (ikkinchi nusxa o'zi to'xtaydi).
+
+**Yangilash:** botni yoping (`stop.bat`), yangi ZIP'ni oching, eski papkadan `.env` va
 `appeal_counter.json` fayllarini yangi papkaga ko'chiring va `start.bat` ni bosing.
 
 Oyna ochiq turguncha bot ishlaydi; oynani yopsangiz, bot to'xtaydi.
@@ -136,7 +143,9 @@ Telegram `Conflict: terminated by other getUpdates request` xatosini beradi.
 ## Loyiha tuzilishi
 
 ```
-start.bat            — Windows uchun bir bosishda ishga tushirish
+start.bat            — Windows: oynada ishga tushirish (birinchi sozlash ham)
+start_hidden.vbs     — Windows: fonda, oynasiz ishga tushirish
+stop.bat             — Windows: fondagi botni to'xtatish
 main.py              — kirish nuqtasi: Application, long-polling, bot buyruqlari
 config.py            — .env dan sozlamalarni o'qish va tekshirish
 messages.py          — barcha o'zbekcha matnlar, klinika ma'lumotlari, FAQ

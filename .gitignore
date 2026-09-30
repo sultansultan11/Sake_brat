@@ -6,3 +6,4 @@ __pycache__/
 .pytest_cache/
 appeal_counter.json
 appeal_counter.json.tmp
+bot.log*

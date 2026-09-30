@@ -6,7 +6,9 @@ Ishga tushirish:  python main.py
 from __future__ import annotations
 
 import logging
+import socket
 import sys
+from logging.handlers import RotatingFileHandler
 
 from telegram import (
     BotCommand,
@@ -21,7 +23,7 @@ from telegram.ext import Application, ApplicationBuilder, Defaults
 from telegram.request import BaseRequest
 
 import messages as msg
-from config import ConfigError, Settings, load_settings
+from config import BASE_DIR, ConfigError, Settings, load_settings
 from handlers import register_handlers
 from handlers.utils import ADMIN_CHAT_OVERRIDE
 from storage import AppealStore
@@ -37,12 +39,22 @@ USER_COMMANDS = [
 ADMIN_COMMANDS = [BotCommand("admin", msg.CMD_ADMIN)]
 
 
+LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+# Bir kompyuterda botning ikkinchi nusxasi ishga tushmasligi uchun band qilinadigan port.
+SINGLE_INSTANCE_PORT = 47391
+
+
 def setup_logging() -> None:
-    logging.basicConfig(
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-        level=logging.INFO,
-        stream=sys.stdout,
-    )
+    if sys.stdout is not None:
+        logging.basicConfig(format=LOG_FORMAT, level=logging.INFO, stream=sys.stdout)
+    else:
+        # Oynasiz rejim (pythonw.exe, start_hidden.vbs): terminal yo'q, shuning
+        # uchun faqat ogohlantirish va xatolar bot.log fayliga yoziladi. Murojaat
+        # matnlari (INFO) faylga yozilmaydi — ular admin chatida bor.
+        handler = RotatingFileHandler(
+            BASE_DIR / "bot.log", maxBytes=1_000_000, backupCount=2, encoding="utf-8"
+        )
+        logging.basicConfig(format=LOG_FORMAT, level=logging.WARNING, handlers=[handler])
     # httpx har bir so'rov URL'ini (ichida BOT_TOKEN bor) INFO darajasida
     # yozadi — token log'ga tushmasligi uchun o'chiramiz.
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -110,8 +122,27 @@ def build_application(settings: Settings, request: BaseRequest | None = None) ->
     return application
 
 
+def acquire_single_instance_lock() -> socket.socket | None:
+    """Shu kompyuterda bot allaqachon ishlayotgan bo'lsa, None qaytaradi."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind(("127.0.0.1", SINGLE_INSTANCE_PORT))
+    except OSError:
+        sock.close()
+        return None
+    return sock
+
+
 def main() -> None:
     setup_logging()
+    lock = acquire_single_instance_lock()
+    if lock is None:
+        logger.error(
+            "Bot shu kompyuterda allaqachon ishlab turibdi (masalan, fonda). "
+            "Ikkinchi nusxa ishga tushirilmadi. To'xtatish uchun stop.bat ni bosing."
+        )
+        sys.exit(1)
+
     try:
         settings = load_settings()
     except ConfigError as exc:
