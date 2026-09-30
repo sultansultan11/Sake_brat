@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
+import logging
+import re
 from html import escape
 
 from telegram import InlineKeyboardMarkup, Update
+from telegram.error import TelegramError
 from telegram.ext import ContextTypes
 
 import keyboards as kb
 import messages as msg
+from handlers import common
 from handlers.utils import get_admin_chat_id, get_settings, get_store, safe_edit
 
+logger = logging.getLogger(__name__)
+
 PER_PAGE = 5
+
+_APPEAL_ID_RE = re.compile(r"APPEAL-\d{4}-\d{3,}")
+_TG_LINE_PREFIX = "💬 Telegram:"
+_TG_ID_RE = re.compile(r"ID (\d+)\s*$")
 
 
 def is_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
@@ -88,3 +98,58 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return
 
     await query.answer(msg.STALE_BUTTON)
+
+
+def _parse_appeal_card(text: str) -> tuple[str, int] | None:
+    """Admin chatidagi murojaat kartasidan (murojaat ID, fuqaro Telegram ID) ni oladi.
+
+    Faqat "💬 Telegram:" bilan boshlanadigan BIRINCHI qator ishlatiladi: u ism
+    qatoridan keyin va murojaat matnidan oldin keladi, ism esa bir qatorli.
+    Shu tufayli fuqaro o'z matniga soxta "ID ..." yozib, javobni boshqa odamga
+    yo'naltira olmaydi.
+    """
+    appeal_match = _APPEAL_ID_RE.search(text)
+    if appeal_match is None:
+        return None
+    for line in text.splitlines():
+        if line.startswith(_TG_LINE_PREFIX):
+            id_match = _TG_ID_RE.search(line)
+            return (appeal_match.group(0), int(id_match.group(1))) if id_match else None
+    return None
+
+
+async def admin_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Admin murojaat xabariga "Reply" qilib yozgan javobni fuqaroga yetkazadi."""
+    message = update.effective_message
+    replied = message.reply_to_message
+    is_reply_to_bot = (
+        replied is not None and replied.from_user is not None
+        and replied.from_user.id == context.bot.id
+    )
+    if not (is_admin(update, context) and is_reply_to_bot):
+        # Admin'ning javobi emas: shaxsiy chatda odatdagidek javob beramiz,
+        # guruhlardagi oddiy yozishmalarga aralashmaymiz.
+        if update.effective_chat.type == "private":
+            await common.unknown(update, context)
+        return
+
+    parsed = _parse_appeal_card(replied.text or "")
+    if parsed is None:
+        await message.reply_text(msg.REPLY_HOW_TO)
+        return
+    appeal_id, citizen_id = parsed
+
+    try:
+        await context.bot.send_message(
+            citizen_id,
+            msg.REPLY_TO_CITIZEN.format(
+                clinic=escape(msg.CLINIC_NAME), appeal_id=appeal_id, text=escape(message.text)
+            ),
+        )
+    except TelegramError:
+        logger.warning("Javob %s fuqaroga (%s) yuborilmadi", appeal_id, citizen_id, exc_info=True)
+        await message.reply_text(msg.REPLY_FAILED)
+        return
+
+    logger.info("Javob yuborildi: %s -> tg_id=%s", appeal_id, citizen_id)
+    await message.reply_text(msg.REPLY_SENT.format(appeal_id=appeal_id))

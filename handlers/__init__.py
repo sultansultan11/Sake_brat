@@ -33,6 +33,13 @@ def register_handlers(application: Application, conversation_timeout: int) -> No
     add(CallbackQueryHandler(admin.admin_callback, pattern=r"^adm:"))
     add(CallbackQueryHandler(common.stale_callback))
 
+    # Admin murojaat xabariga "Reply" qilib javob yozadi (admin chati guruh ham bo'lishi mumkin).
+    add(
+        MessageHandler(
+            filters.UpdateType.MESSAGE & filters.REPLY & filters.TEXT & ~filters.COMMAND,
+            admin.admin_reply,
+        )
+    )
     add(MessageHandler(PRIVATE, common.unknown))
 
     application.add_error_handler(errors.error_handler)

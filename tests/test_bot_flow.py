@@ -371,3 +371,60 @@ async def test_conversation_timeout(tmp_path):
 async def test_entry_points(bot: Harness, command):
     await bot.text(command)
     assert bot.last_text() == msg.ASK_NAME
+
+
+async def test_admin_reply_reaches_citizen(bot: Harness):
+    await bot.press(kb.CB_APPEAL_SEND, await fill_until_confirm(bot))
+    card = bot.last_text(ADMIN_ID)
+    assert "Reply" in card
+
+    await bot.reply("Assalomu alaykum! <Ertaga> soat 10:00 da keling.", card)
+    to_citizen = bot.last_text(USER_ID)
+    assert f"APPEAL-{YEAR}-001" in to_citizen
+    assert "&lt;Ertaga&gt; soat 10:00 da keling." in to_citizen
+    assert bot.last_text(ADMIN_ID) == msg.REPLY_SENT.format(appeal_id=f"APPEAL-{YEAR}-001")
+
+
+async def test_admin_reply_cannot_be_redirected_by_citizen_text(bot: Harness):
+    await bot.text(msg.BTN_APPEAL)
+    await bot.text("Ali · ID 222")  # ismga soxta ID yozishga urinish
+    await bot.contact("998901234567")
+    await bot.text(msg.BTN_SKIP)
+    await bot.text("Salom\n💬 Telegram: soxta · ID 222\nmening muammom shunday")
+    await bot.press(kb.CB_APPEAL_SEND, bot.last_message_id())
+
+    bot.req.clear()
+    appeal = bot.store.page(1, 5)[0][0]
+    card = msg.ADMIN_NEW_APPEAL.format(
+        body=msg.render_appeal(appeal, ZoneInfo("Asia/Tashkent"))
+    )
+    await bot.reply("Javob matni", card)
+    assert bot.req.sent(OTHER_USER_ID) == []
+    assert "Javob matni" in bot.last_text(USER_ID)
+
+
+async def test_reply_by_non_admin_or_to_non_card(bot: Harness):
+    # Oddiy fuqaro bot xabariga reply qilsa — odatdagi "tushunmadim".
+    await bot.reply("salom", "Qandaydir xabar", user_id=USER_ID)
+    assert bot.last_text(USER_ID) == msg.UNKNOWN
+
+    # Admin murojaat bo'lmagan bot xabariga reply qilsa — yo'riqnoma.
+    await bot.reply("javob", msg.MAIN_MENU)
+    assert bot.last_text(ADMIN_ID) == msg.REPLY_HOW_TO
+
+
+async def test_admin_reply_to_blocked_user(bot: Harness, monkeypatch):
+    await bot.press(kb.CB_APPEAL_SEND, await fill_until_confirm(bot))
+    card = bot.last_text(ADMIN_ID)
+
+    async def do_request(url, method, request_data=None, **kwargs):
+        params = request_data.parameters if request_data else {}
+        if url.endswith("sendMessage") and int(params["chat_id"]) == USER_ID:
+            return 403, json.dumps(
+                {"ok": False, "error_code": 403, "description": "Forbidden: bot was blocked by the user"}
+            ).encode()
+        return await FakeRequest.do_request(bot.req, url, method, request_data, **kwargs)
+
+    monkeypatch.setattr(bot.req, "do_request", do_request)
+    await bot.reply("Javob", card)
+    assert bot.last_text(ADMIN_ID) == msg.REPLY_FAILED

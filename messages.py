@@ -245,7 +245,26 @@ STALE_BUTTON = "Bu tugma eskirgan."
 
 ADMIN_ONLY = "⛔ Bu buyruq faqat klinika administratorlari uchun."
 
-ADMIN_NEW_APPEAL = "📥 <b>Yangi murojaat</b>\n\n{body}"
+ADMIN_NEW_APPEAL = (
+    "📥 <b>Yangi murojaat</b>\n\n{body}\n\n"
+    "↩️ <i>Fuqaroga javob berish uchun shu xabarga «Ответить / Reply» qilib yozing.</i>"
+)
+
+# Admin javobi fuqaroga shu ko'rinishda boradi
+REPLY_TO_CITIZEN = (
+    "📩 <b>{clinic}dan javob</b>\n"
+    "Murojaat: <code>{appeal_id}</code>\n\n"
+    "{text}"
+)
+REPLY_SENT = "✅ Javob fuqaroga yuborildi ({appeal_id})."
+REPLY_FAILED = (
+    "❌ Javobni yuborib boʻlmadi: fuqaro botni bloklagan yoki oʻchirgan boʻlishi mumkin. "
+    "Murojaatdagi telefon yoki email orqali bogʻlaning."
+)
+REPLY_HOW_TO = (
+    "Javob berish uchun murojaat xabarining (📥 Yangi murojaat) ustiga bosib, "
+    "«Ответить / Reply» ni tanlang va javobingizni yozing."
+)
 
 ADMIN_EMPTY = (
     "📋 Hozircha murojaatlar yoʻq.\n\n"

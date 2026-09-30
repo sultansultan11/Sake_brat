@@ -21,6 +21,17 @@ Qo'shimcha:
 - Murojaat 30 daqiqa ichida to'ldirilmasa, avtomatik bekor qilinadi.
 - Tasdiqlash tugmasi ikki marta bosilsa ham murojaat bir marta yuboriladi.
 
+## Fuqaroga javob berish
+
+Admin chatiga kelgan **📥 Yangi murojaat** xabarini bosing, **«Ответить / Reply»**
+ni tanlang va javobni yozing. Bot uni murojaat raqami bilan fuqaroga yuboradi
+va «✅ Javob fuqaroga yuborildi» deb tasdiqlaydi. Bir murojaatga bir necha marta
+javob yozish mumkin. `/admin` ro'yxatidan ochilgan murojaat kartasiga ham
+shunday javob berish mumkin.
+
+Fuqaro botni bloklagan bo'lsa, bot buni aytadi. Unda murojaatdagi telefon yoki
+email orqali bog'laning.
+
 ## Ma'lumotlar saqlanishi
 
 - **Ma'lumotlar bazasi yo'q** (SQLite ham). Murojaatlar faqat operativ xotirada

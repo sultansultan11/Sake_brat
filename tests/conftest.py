@@ -7,7 +7,9 @@ ishlaydi, faqat tarmoq so'rovlari yozib olinadi.
 
 from __future__ import annotations
 
+import html
 import itertools
+import re
 import json
 from pathlib import Path
 from typing import Any
@@ -134,6 +136,27 @@ class Harness:
                 {"type": "bot_command", "offset": 0, "length": len(text.split()[0])}
             ]
         await self._process({"message": self._message(user_id, chat_id, **extra)})
+
+    async def reply(
+        self, text: str, to_html: str, user_id: int = ADMIN_ID, chat_id: int | None = None,
+        from_bot: bool = True,
+    ) -> None:
+        """Bot yuborgan xabarga (HTML matni `to_html`) "Reply" qilib yozish."""
+        chat_id = chat_id if chat_id is not None else user_id
+        sender = (
+            {"id": BOT_ID, "is_bot": True, "first_name": "Bot"} if from_bot else self._user(user_id)
+        )
+        replied = {
+            "message_id": 999,
+            "date": 0,
+            "chat": self._chat(chat_id),
+            "from": sender,
+            # Telegram reply_to_message.text da HTML teglarsiz oddiy matn qaytaradi.
+            "text": html.unescape(re.sub(r"<[^>]+>", "", to_html)),
+        }
+        await self._process(
+            {"message": self._message(user_id, chat_id, text=text, reply_to_message=replied)}
+        )
 
     async def contact(self, phone: str, owner_id: int | None = USER_ID, user_id: int = USER_ID):
         contact = {"phone_number": phone, "first_name": "Ali"}
