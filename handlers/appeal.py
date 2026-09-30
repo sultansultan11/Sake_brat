@@ -1,6 +1,6 @@
 """Murojaat yuborish jarayoni (ConversationHandler).
 
-Qadamlar: ism → telefon → email (ixtiyoriy) → murojaat matni → tasdiqlash.
+Qadamlar: soha → ism → telefon → email (ixtiyoriy) → murojaat matni → tasdiqlash.
 To'ldirilayotgan murojaat faqat context.user_data ichida (RAM) turadi.
 """
 
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from html import escape
 from zoneinfo import ZoneInfo
 
@@ -40,7 +40,7 @@ from validators import TEXT_MAX, check_text, clean_email, clean_name, normalize_
 
 logger = logging.getLogger(__name__)
 
-NAME, PHONE, EMAIL, TEXT, CONFIRM = range(5)
+CATEGORY, NAME, PHONE, EMAIL, TEXT, CONFIRM = range(6)
 END = ConversationHandler.END
 
 DRAFT = "appeal_draft"
@@ -56,6 +56,7 @@ _BUTTON_TEXTS = filters.Text(
         msg.BTN_CANCEL,
         msg.BTN_SKIP,
         msg.BTN_SHARE_CONTACT,
+        *msg.CATEGORIES,
     ]
 )
 USER_TEXT = PRIVATE & filters.TEXT & ~filters.COMMAND & ~_BUTTON_TEXTS
@@ -63,6 +64,7 @@ USER_TEXT = PRIVATE & filters.TEXT & ~filters.COMMAND & ~_BUTTON_TEXTS
 _ADMIN_COMMAND = filters.Regex(r"^/admin(@\w+)?(\s|$)")
 
 _PROMPTS = {
+    CATEGORY: (msg.ASK_CATEGORY, kb.categories),
     NAME: (msg.ASK_NAME, kb.cancel_only),
     PHONE: (msg.ASK_PHONE, kb.share_contact),
     EMAIL: (msg.ASK_EMAIL, kb.skip_email),
@@ -124,6 +126,7 @@ async def _send_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE)
     draft["step"] = CONFIRM
     sent = await update.effective_message.reply_text(
         msg.CONFIRM.format(
+            category=escape(draft.get("category") or "—"),
             name=escape(draft["full_name"]),
             phone=escape(draft["phone"]),
             email=escape(draft["email"]) if draft.get("email") else msg.EMAIL_NOT_GIVEN,
@@ -139,9 +142,34 @@ async def _send_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE)
 # --- Qadamlar ---------------------------------------------------------------
 
 
+RATE_WINDOW = timedelta(days=1)
+
+
+def _rate_limited(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    settings = get_settings(context)
+    count = get_store(context).recent_count(
+        update.effective_user.id, datetime.now(settings.timezone), RATE_WINDOW
+    )
+    return count >= settings.max_appeals_per_day
+
+
 async def start_appeal(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await _discard_draft(update, context)
+    if _rate_limited(update, context):
+        return await _finish(
+            update,
+            context,
+            msg.RATE_LIMITED.format(
+                limit=get_settings(context).max_appeals_per_day,
+                phone=escape(msg.CLINIC_PHONE),
+            ),
+        )
     context.user_data[DRAFT] = {}
+    return await _ask(update, context, CATEGORY)
+
+
+async def got_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    _draft(context)["category"] = update.message.text
     return await _ask(update, context, NAME)
 
 
@@ -269,6 +297,7 @@ async def confirm_action(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         phone_verified=bool(draft.get("phone_verified")),
         email=draft.get("email"),
         text=draft["text"],
+        category=draft.get("category", ""),
     )
     _log_appeal(appeal, settings.timezone)
     await _notify_admin(context, appeal)
@@ -324,7 +353,7 @@ async def cancel_and_faq(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def reprompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Joriy qadamga mos kelmagan xabar: rasm, ovozli xabar, noma'lum buyruq,
     noto'g'ri tugma... Joriy savol (va uning klaviaturasi) qayta beriladi."""
-    step = _draft(context).get("step", NAME)
+    step = _draft(context).get("step", CATEGORY)
     message = update.effective_message
     if step == CONFIRM:
         await message.reply_text(msg.PRESS_BUTTON)
@@ -361,9 +390,10 @@ def _log_appeal(appeal: Appeal, tz: ZoneInfo) -> None:
     # matni ichiga soxta "YANGI MUROJAAT ..." log qatorini joylashtira olmaydi.
     body = "\n".join(f"    | {line}" for line in appeal.text.splitlines())
     logger.info(
-        "YANGI MUROJAAT %s | %s | ism=%r | tel=%s%s | email=%r | tg_id=%s | username=%s\n%s",
+        "YANGI MUROJAAT %s | %s | soha=%s | ism=%r | tel=%s%s | email=%r | tg_id=%s | username=%s\n%s",
         appeal.appeal_id,
         msg.format_date(appeal.created_at, tz),
+        appeal.category or "-",
         appeal.full_name,
         appeal.phone,
         " (tasdiqlangan)" if appeal.phone_verified else "",
@@ -418,6 +448,7 @@ def build_conversation(timeout_seconds: int) -> ConversationHandler:
             CommandHandler("murojaat", start_appeal, filters=PRIVATE),
         ],
         states={
+            CATEGORY: [MessageHandler(PRIVATE & filters.Text(msg.CATEGORIES), got_category)],
             NAME: [MessageHandler(USER_TEXT, got_name)],
             PHONE: [
                 MessageHandler(PRIVATE & filters.CONTACT, got_contact),

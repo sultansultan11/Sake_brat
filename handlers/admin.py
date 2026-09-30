@@ -52,6 +52,7 @@ def _render_page(
                 n=n,
                 appeal_id=appeal.appeal_id,
                 name=escape(appeal.full_name),
+                category=escape(appeal.category) if appeal.category else "—",
                 date=msg.format_date(appeal.created_at, tz),
                 phone=escape(appeal.phone),
                 preview=msg.render_preview(appeal.text),

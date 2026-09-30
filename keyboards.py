@@ -35,6 +35,13 @@ def main_menu() -> ReplyKeyboardMarkup:
     )
 
 
+def categories() -> ReplyKeyboardMarkup:
+    labels = msg.CATEGORIES
+    rows = [labels[i : i + 2] for i in range(0, len(labels), 2)]
+    rows.append([msg.BTN_CANCEL])
+    return ReplyKeyboardMarkup(rows, resize_keyboard=True)
+
+
 def cancel_only() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup([[msg.BTN_CANCEL]], resize_keyboard=True)
 

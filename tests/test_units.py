@@ -85,6 +85,27 @@ def test_pagination_newest_first_and_clamped():
     assert AppealStore().page(1, 5) == ([], 1, 1)
 
 
+def test_recent_count_window():
+    from datetime import timedelta
+
+    store = AppealStore()
+    day = timedelta(days=1)
+    t0 = datetime(2026, 1, 1, 9, tzinfo=TZ)
+    _create(store, t0)
+    _create(store, t0 + timedelta(hours=5))
+    assert store.recent_count(1, t0 + timedelta(hours=6), day) == 2
+    assert store.recent_count(1, t0 + timedelta(hours=25), day) == 1
+    assert store.recent_count(2, t0, day) == 0
+
+
+def test_pristine_env_example_fails_validation(clean_env, monkeypatch, tmp_path):
+    """.env.example to'ldirilmasa, bot ishga tushmasligi kerak."""
+    env = tmp_path / ".env"
+    env.write_text((config.BASE_DIR / ".env.example").read_text(encoding="utf-8"), encoding="utf-8")
+    with pytest.raises(ConfigError):
+        load_settings(env)
+
+
 # --- validators ------------------------------------------------------------
 
 

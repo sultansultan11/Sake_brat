@@ -22,5 +22,13 @@ Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
 
+# Xavfsizlik: yaratilgan fayllar faqat botuser'ga ochiq, tizim fayllari faqat o'qish uchun
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/legal-clinic-bot
+
 [Install]
 WantedBy=multi-user.target

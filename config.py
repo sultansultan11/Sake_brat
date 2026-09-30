@@ -32,6 +32,8 @@ class Settings:
     max_appeals_in_memory: int
     # Murojaat to'ldirilmay qolsa, necha soniyadan keyin bekor qilinadi.
     conversation_timeout: int
+    # Bir foydalanuvchi 24 soatda yuborishi mumkin bo'lgan murojaatlar soni.
+    max_appeals_per_day: int = 3
 
 
 def _require(name: str) -> str:
@@ -97,4 +99,5 @@ def load_settings(env_file: Path | None = None) -> Settings:
         counter_file=counter_file,
         max_appeals_in_memory=_int("MAX_APPEALS_IN_MEMORY", 500, 1),
         conversation_timeout=_int("CONVERSATION_TIMEOUT", 1800, 60),
+        max_appeals_per_day=_int("MAX_APPEALS_PER_DAY", 3, 1),
     )

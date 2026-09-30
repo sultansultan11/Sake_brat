@@ -69,7 +69,16 @@ class FakeRequest(BaseRequest):
                 "text": params.get("text", ""),
             }
         if api_method == "getChat":
-            return {"id": int(params["chat_id"]), "type": "private"}
+            chat_id = int(params["chat_id"])
+            chat = {
+                "id": chat_id,
+                "type": "private" if chat_id > 0 else "supergroup",
+                "accent_color_id": 0,
+                "max_reaction_count": 11,
+            }
+            if chat_id < 0:
+                chat["title"] = "Admin"
+            return chat
         return True
 
     # --- Tekshiruv uchun yordamchilar --------------------------------------
@@ -210,6 +219,7 @@ def make_settings(tmp_path: Path, **overrides) -> Settings:
         counter_file=tmp_path / "counter.json",
         max_appeals_in_memory=500,
         conversation_timeout=1800,
+        max_appeals_per_day=100,
     )
     values.update(overrides)
     return Settings(**values)

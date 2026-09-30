@@ -3,9 +3,8 @@
 Matnlar HTML formatida (parse_mode=HTML). Foydalanuvchi kiritgan har qanday
 qiymat shablonga qo'yilishidan oldin html.escape() orqali tozalanishi shart.
 
-⚠️ KLINIKA MA'LUMOTLARI (CLINIC_*) VA FAQ JAVOBLARI — NAMUNA. Ishga
-tushirishdan oldin ularni klinikangizning haqiqiy ma'lumotlari bilan
-almashtiring.
+Klinika ma'lumotlari (CLINIC_*) "Biz haqimizda" bo'limida ko'rinadi. FAQ
+javoblarini klinika amaliyotiga mosligini vaqti-vaqti bilan tekshirib turing.
 """
 
 from __future__ import annotations
@@ -24,10 +23,10 @@ CLINIC_DESCRIPTION = (
     "Klinikamiz fuqarolarga fuqarolik, oila, mehnat, uy-joy va maʼmuriy "
     "huquq masalalarida bepul huquqiy maslahat beradi."
 )
-CLINIC_ADDRESS = "Toshkent sh., [koʻcha nomi, uy raqami]"
+CLINIC_ADDRESS = "Nukus shahri, Taxiyatas guzari, raqamsiz uy"
 CLINIC_HOURS = "Dushanba–Juma, 09:00–18:00 (tushlik 13:00–14:00)"
-CLINIC_PHONE = "+998 [XX] [XXX-XX-XX]"
-CLINIC_EMAIL = "[klinika]@example.com"
+CLINIC_PHONE = "+998 99 669-97-41"
+CLINIC_EMAIL = "sultanaymuratov@gmail.com"
 
 # --- Tugmalar ----------------------------------------------------------------
 
@@ -149,10 +148,29 @@ FAQ: list[tuple[str, str]] = [
 
 # --- Murojaat yuborish jarayoni ---------------------------------------------
 
-ASK_NAME = (
-    "📝 <b>Yangi murojaat</b> · 1/4-qadam\n\n"
+# Huquq sohalari (murojaatni to'g'ri yuristga yo'naltirish uchun).
+# Jinoyat ishlari ataylab yo'q — klinika ularni ko'rib chiqmaydi.
+CATEGORIES = [
+    "🏛 Fuqarolik ishlari",
+    "👪 Oilaviy ishlar",
+    "💼 Mehnat nizolari",
+    "🏠 Uy-joy masalalari",
+    "🧾 Ijtimoiy taʼminot",
+    "🛒 Isteʼmolchilar huquqlari",
+    "🏢 Maʼmuriy masalalar",
+    "📌 Boshqa",
+]
+
+ASK_CATEGORY = (
+    "📝 <b>Yangi murojaat</b> · 1/5-qadam\n\n"
     "⚠️ <i>Klinika jinoyat ishlari boʻyicha murojaatlarni koʻrib chiqmaydi — "
     "bunday holatda malakali advokatga murojaat qiling.</i>\n\n"
+    "Murojaatingiz qaysi sohaga tegishli? Pastdagi tugmalardan birini tanlang.\n"
+    "<i>Aniq bilmasangiz, «📌 Boshqa» ni tanlang.</i>"
+)
+
+ASK_NAME = (
+    "👤 <b>2/5-qadam</b>\n\n"
     "Ism va familiyangizni kiriting:\n"
     "<i>Masalan: Aliyev Vali</i>"
 )
@@ -162,7 +180,7 @@ BAD_NAME = (
 )
 
 ASK_PHONE = (
-    "📞 <b>2/4-qadam</b>\n\n"
+    "📞 <b>3/5-qadam</b>\n\n"
     f"Telefon raqamingizni yuboring: pastdagi «{BTN_SHARE_CONTACT}» tugmasini "
     "bosing yoki raqamni qoʻlda yozing.\n"
     "<i>Masalan: +998 90 123 45 67</i>"
@@ -173,7 +191,7 @@ BAD_PHONE = (
 )
 
 ASK_EMAIL = (
-    "✉️ <b>3/4-qadam</b>\n\n"
+    "✉️ <b>4/5-qadam</b>\n\n"
     "Elektron pochta (email) manzilingizni kiriting.\n"
     f"Agar email boʻlmasa, «{BTN_SKIP}» tugmasini bosing."
 )
@@ -183,7 +201,7 @@ BAD_EMAIL = (
 )
 
 ASK_TEXT = (
-    "🧾 <b>4/4-qadam</b>\n\n"
+    "🧾 <b>5/5-qadam</b>\n\n"
     "Murojaatingiz matnini yozing: nima sodir boʻlgani, qachon boʻlgani va "
     "qanday yordam kutayotganingizni batafsil bayon qiling.\n\n"
     f"<i>Kamida {TEXT_MIN} ta, koʻpi bilan {TEXT_MAX} ta belgi. "
@@ -210,11 +228,16 @@ EMAIL_NOT_GIVEN = "koʻrsatilmagan"
 
 CONFIRM = (
     "🔎 <b>Maʼlumotlarni tekshiring</b>\n\n"
+    "📂 <b>Soha:</b> {category}\n"
     "👤 <b>Ism:</b> {name}\n"
     "📞 <b>Telefon:</b> {phone}\n"
     "✉️ <b>Email:</b> {email}\n\n"
     "🧾 <b>Murojaat matni:</b>\n{text}\n\n"
-    "Hammasi toʻgʻrimi?"
+    "Hammasi toʻgʻrimi?\n\n"
+    "<i>«✅ Yuborish» tugmasini bosish orqali siz shaxsga doir maʼlumotlaringiz "
+    "(ism, telefon, email) klinika tomonidan faqat murojaatingizni koʻrib "
+    "chiqish va siz bilan bogʻlanish maqsadida qayta ishlanishiga rozilik "
+    "bildirasiz.</i>"
 )
 PRESS_BUTTON = (
     "👆 Iltimos, yuqoridagi xabardagi tugmalardan birini bosing: "
@@ -239,6 +262,11 @@ SESSION_LOST = (
     f"yuborilmadi. Iltimos, «{BTN_APPEAL}» tugmasini bosib, qaytadan boshlang."
 )
 ALREADY_SENT = "Bu murojaat allaqachon yuborilgan: {appeal_id}"
+RATE_LIMITED = (
+    "⏳ Siz soʻnggi 24 soat ichida {limit} ta murojaat yuborgansiz. Yangi "
+    "murojaatni keyinroq yuborishingiz mumkin. Shoshilinch holatda klinikaga "
+    "telefon orqali murojaat qiling: {phone}"
+)
 STALE_BUTTON = "Bu tugma eskirgan."
 
 # --- Admin -------------------------------------------------------------------
@@ -275,6 +303,7 @@ ADMIN_EMPTY = (
 ADMIN_LIST_HEADER = "📋 <b>Murojaatlar</b> — jami {total} ta · {page}/{pages}-sahifa\n\n"
 ADMIN_LIST_ITEM = (
     "<b>{n}.</b> <code>{appeal_id}</code> — {name}\n"
+    "📂 {category}\n"
     "🕒 {date} · 📞 {phone}\n"
     "<i>{preview}</i>\n\n"
 )
@@ -290,7 +319,8 @@ NO_USERNAME = "username yoʻq"
 
 APPEAL_CARD = (
     "🆔 <b>{appeal_id}</b>\n"
-    "🕒 {date}\n\n"
+    "🕒 {date}\n"
+    "📂 <b>Soha:</b> {category}\n\n"
     "👤 <b>Ism:</b> {name}\n"
     "📞 <b>Telefon:</b> {phone} ({phone_note})\n"
     "✉️ <b>Email:</b> {email}\n"
@@ -314,6 +344,7 @@ def render_appeal(appeal: Appeal, tz: ZoneInfo) -> str:
     return APPEAL_CARD.format(
         appeal_id=escape(appeal.appeal_id),
         date=format_date(appeal.created_at, tz),
+        category=escape(appeal.category) if appeal.category else "—",
         name=escape(appeal.full_name),
         phone=escape(appeal.phone),
         phone_note=PHONE_VERIFIED if appeal.phone_verified else PHONE_TYPED,

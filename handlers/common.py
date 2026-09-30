@@ -91,7 +91,7 @@ async def stale_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 # Murojaat qadamlariga tegishli tugmalar: suhbatdan tashqarida kelsa, demak
 # qoralama yo'qolgan (masalan, bot qayta ishga tushirilgan).
-_FORM_BUTTONS = {msg.BTN_SKIP, msg.BTN_SHARE_CONTACT}
+_FORM_BUTTONS = {msg.BTN_SKIP, msg.BTN_SHARE_CONTACT, *msg.CATEGORIES}
 
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

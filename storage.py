@@ -18,7 +18,7 @@ import math
 import os
 from collections import OrderedDict
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ class Appeal:
     phone_verified: bool
     email: str | None
     text: str
+    category: str = ""
 
 
 class AppealStore:
@@ -42,6 +43,8 @@ class AppealStore:
         self._appeals: OrderedDict[str, Appeal] = OrderedDict()
         self._max_items = max_items
         self._counter_file = counter_file
+        # Spamdan himoya uchun: foydalanuvchi -> murojaat vaqtlari (faqat RAM).
+        self._submissions: dict[int, list[datetime]] = {}
         self._year, self._last = self._load_counter()
 
     # --- Hisoblagich -----------------------------------------------------
@@ -94,6 +97,7 @@ class AppealStore:
         phone_verified: bool,
         email: str | None,
         text: str,
+        category: str = "",
     ) -> Appeal:
         appeal = Appeal(
             appeal_id=self._next_id(now),
@@ -105,12 +109,24 @@ class AppealStore:
             phone_verified=phone_verified,
             email=email,
             text=text,
+            category=category,
         )
         self._appeals[appeal.appeal_id] = appeal
+        self._submissions.setdefault(user_id, []).append(now)
         while len(self._appeals) > self._max_items:
             dropped_id, _ = self._appeals.popitem(last=False)
             logger.info("Xotira chegarasi: %s /admin ro'yxatidan chiqarildi", dropped_id)
         return appeal
+
+    def recent_count(self, user_id: int, now: datetime, window: timedelta) -> int:
+        """Foydalanuvchining oxirgi `window` ichidagi murojaatlari soni."""
+        since = now - window
+        times = [t for t in self._submissions.get(user_id, []) if t > since]
+        if times:
+            self._submissions[user_id] = times
+        else:
+            self._submissions.pop(user_id, None)
+        return len(times)
 
     def get(self, appeal_id: str) -> Appeal | None:
         return self._appeals.get(appeal_id)

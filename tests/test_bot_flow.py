@@ -22,11 +22,13 @@ from tests.conftest import (
 )
 
 YEAR = datetime.now(ZoneInfo("Asia/Tashkent")).year
+CATEGORY = msg.CATEGORIES[2]  # "Mehnat nizolari"
 LONG_TEXT = "Ish beruvchi uch oydan beri ish haqimni toʻlamayapti, nima qilishim kerak?"
 
 
 async def fill_until_confirm(bot: Harness, name="Aliyev Vali", email=msg.BTN_SKIP) -> int:
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text(name)
     await bot.contact("998901234567")
     await bot.text(email)
@@ -45,6 +47,7 @@ async def test_start_shows_main_menu(bot: Harness):
 
 async def test_full_appeal_flow(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     assert bot.last_text() == msg.ASK_NAME
 
     await bot.text("Aliyev Vali")
@@ -91,6 +94,7 @@ async def test_ids_are_sequential(bot: Harness):
 
 async def test_typed_phone_and_skipped_email(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("Aliyev Vali")
     await bot.text("90 123-45-67")
     await bot.text(msg.BTN_SKIP)
@@ -107,6 +111,7 @@ async def test_typed_phone_and_skipped_email(bot: Harness):
 
 async def test_someone_elses_contact_is_not_verified(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("Aliyev Vali")
     await bot.contact("+998 90 765 43 21", owner_id=OTHER_USER_ID)
     await bot.text(msg.BTN_SKIP)
@@ -117,6 +122,7 @@ async def test_someone_elses_contact_is_not_verified(bot: Harness):
 
 async def test_validation_messages(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("12")
     assert bot.last_text() == msg.BAD_NAME
     await bot.text("Aliyev Vali")
@@ -139,6 +145,7 @@ async def test_validation_messages(bot: Harness):
 
 async def test_non_text_is_rejected_and_step_repeated(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.photo()
     texts = bot.req.texts()
     assert texts[-2] == msg.ONLY_TEXT
@@ -151,6 +158,7 @@ async def test_non_text_is_rejected_and_step_repeated(bot: Harness):
 
 async def test_button_labels_are_not_accepted_as_data(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text(msg.BTN_SKIP)  # NAME qadamida "O'tkazib yuborish" — ism emas
     assert bot.last_text() == msg.ASK_NAME
     await bot.text("Aliyev Vali")
@@ -159,6 +167,7 @@ async def test_button_labels_are_not_accepted_as_data(bot: Harness):
 
 async def test_cancel_button_ends_conversation(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("Aliyev Vali")
     await bot.text(msg.BTN_CANCEL)
     assert bot.last_text() == msg.CANCELLED
@@ -168,6 +177,7 @@ async def test_cancel_button_ends_conversation(bot: Harness):
 
 async def test_start_during_conversation_resets(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("/start")
     assert "xush kelibsiz" in bot.last_text()
     await bot.text("Aliyev Vali")
@@ -176,6 +186,7 @@ async def test_start_during_conversation_resets(bot: Harness):
 
 async def test_help_during_conversation_keeps_state(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("/help")
     assert bot.req.texts()[-2:] == [msg.HELP, msg.ASK_NAME]  # savol qayta beriladi
     await bot.text("Aliyev Vali")
@@ -185,7 +196,7 @@ async def test_help_during_conversation_keeps_state(bot: Harness):
 async def test_confirm_cancel_and_restart(bot: Harness):
     confirm_id = await fill_until_confirm(bot)
     await bot.press(kb.CB_APPEAL_RESTART, confirm_id)
-    assert bot.last_text() == msg.ASK_NAME
+    assert bot.last_text() == msg.ASK_CATEGORY
 
     confirm_id = await fill_until_confirm(bot)
     await bot.press(kb.CB_APPEAL_CANCEL, confirm_id)
@@ -359,6 +370,7 @@ async def test_conversation_timeout(tmp_path):
         await app.start()
         bot = Harness(app, request)
         await bot.text(msg.BTN_APPEAL)
+        await bot.text(CATEGORY)
         await bot.text("Aliyev Vali")
         await asyncio.sleep(2.5)
         assert bot.last_text() == msg.TIMEOUT
@@ -370,7 +382,43 @@ async def test_conversation_timeout(tmp_path):
 @pytest.mark.parametrize("command", ["/murojaat", msg.BTN_APPEAL])
 async def test_entry_points(bot: Harness, command):
     await bot.text(command)
+    sent = bot.req.sent(USER_ID)[-1]
+    assert sent["text"] == msg.ASK_CATEGORY
+    buttons = [b["text"] for row in sent["reply_markup"]["keyboard"] for b in row]
+    assert buttons == [*msg.CATEGORIES, msg.BTN_CANCEL]
+
+
+async def test_category_must_be_chosen_from_buttons(bot: Harness):
+    await bot.text(msg.BTN_APPEAL)
+    await bot.text("Aliyev Vali")  # soha o'rniga ism yozildi
+    assert bot.last_text() == msg.ASK_CATEGORY
+    await bot.text(CATEGORY)
     assert bot.last_text() == msg.ASK_NAME
+    await bot.text("Aliyev Vali")
+    await bot.contact("998901234567")
+    await bot.text(msg.BTN_SKIP)
+    await bot.text(LONG_TEXT)
+    assert CATEGORY in bot.last_text()
+    await bot.press(kb.CB_APPEAL_SEND, bot.last_message_id())
+    assert CATEGORY in bot.last_text(ADMIN_ID)
+    assert bot.store.page(1, 5)[0][0].category == CATEGORY
+
+
+async def test_rate_limit(tmp_path):
+    request = FakeRequest()
+    app = build_application(make_settings(tmp_path, max_appeals_per_day=2), request=request)
+    async with app:
+        await app.start()
+        bot = Harness(app, request)
+        for _ in range(2):
+            await bot.press(kb.CB_APPEAL_SEND, await fill_until_confirm(bot))
+        await bot.text(msg.BTN_APPEAL)
+        assert "24 soat ichida 2 ta" in bot.last_text()
+        assert len(bot.store) == 2
+        # Boshqa foydalanuvchiga cheklov ta'sir qilmaydi.
+        await bot.text(msg.BTN_APPEAL, user_id=OTHER_USER_ID)
+        assert bot.last_text(OTHER_USER_ID) == msg.ASK_CATEGORY
+        await app.stop()
 
 
 async def test_admin_reply_reaches_citizen(bot: Harness):
@@ -387,6 +435,7 @@ async def test_admin_reply_reaches_citizen(bot: Harness):
 
 async def test_admin_reply_cannot_be_redirected_by_citizen_text(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
+    await bot.text(CATEGORY)
     await bot.text("Ali · ID 222")  # ismga soxta ID yozishga urinish
     await bot.contact("998901234567")
     await bot.text(msg.BTN_SKIP)
@@ -428,3 +477,38 @@ async def test_admin_reply_to_blocked_user(bot: Harness, monkeypatch):
     monkeypatch.setattr(bot.req, "do_request", do_request)
     await bot.reply("Javob", card)
     assert bot.last_text(ADMIN_ID) == msg.REPLY_FAILED
+
+
+async def test_post_init_registers_commands(tmp_path):
+    import main
+
+    request = FakeRequest()
+    app = build_application(make_settings(tmp_path), request=request)
+    async with app:
+        await main.post_init(app)
+    scopes = {
+        p["scope"]["type"]: [c["command"] for c in p["commands"]]
+        for p in request.of("setMyCommands")
+    }
+    assert scopes["all_private_chats"] == ["start", "murojaat", "cancel", "help"]
+    assert scopes["chat"] == ["start", "murojaat", "cancel", "help", "admin"]
+
+
+async def test_post_init_warns_when_admin_unreachable(tmp_path, caplog, monkeypatch):
+    import main
+
+    request = FakeRequest()
+    original = request.do_request
+
+    async def do_request(url, method, request_data=None, **kwargs):
+        if url.endswith("getChat"):
+            return 400, json.dumps(
+                {"ok": False, "error_code": 400, "description": "Bad Request: chat not found"}
+            ).encode()
+        return await original(url, method, request_data, **kwargs)
+
+    monkeypatch.setattr(request, "do_request", do_request)
+    app = build_application(make_settings(tmp_path), request=request)
+    async with app:
+        await main.post_init(app)  # xato ko'tarmasligi kerak
+    assert "chatiga kirib bo'lmadi" in caplog.text
