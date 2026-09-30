@@ -57,7 +57,16 @@ WELCOME = (
     "Kerakli boʻlimni tanlang 👇"
 )
 
+DEFAULT_USER_NAME = "hurmatli foydalanuvchi"
+
 MAIN_MENU = "🏠 Bosh menyu. Kerakli boʻlimni tanlang 👇"
+
+# Telegram'ning "/" menyusidagi buyruqlar tavsifi
+CMD_START = "Botni ishga tushirish"
+CMD_APPEAL = "Yangi murojaat yuborish"
+CMD_CANCEL = "Murojaatni bekor qilish"
+CMD_HELP = "Yordam"
+CMD_ADMIN = "Murojaatlar roʻyxati"
 
 HELP = (
     "ℹ️ <b>Yordam</b>\n\n"
@@ -115,7 +124,7 @@ FAQ: list[tuple[str, str]] = [
         "2. Ism-familiyangizni kiriting.\n"
         "3. Telefon raqamingizni ulashing yoki yozing.\n"
         "4. Email manzilingizni kiriting (ixtiyoriy).\n"
-        "5. Muammoingizni batafsil yozing va yuboring.\n\n"
+        "5. Muammongizni batafsil yozing va yuboring.\n\n"
         "Yuborilgandan soʻng sizga murojaat raqami beriladi "
         "(masalan, <code>APPEAL-2026-001</code>).",
     ),
@@ -142,6 +151,8 @@ FAQ: list[tuple[str, str]] = [
 
 ASK_NAME = (
     "📝 <b>Yangi murojaat</b> · 1/4-qadam\n\n"
+    "⚠️ <i>Klinika jinoyat ishlari boʻyicha murojaatlarni koʻrib chiqmaydi — "
+    "bunday holatda malakali advokatga murojaat qiling.</i>\n\n"
     "Ism va familiyangizni kiriting:\n"
     "<i>Masalan: Aliyev Vali</i>"
 )
@@ -176,11 +187,17 @@ ASK_TEXT = (
     "Murojaatingiz matnini yozing: nima sodir boʻlgani, qachon boʻlgani va "
     "qanday yordam kutayotganingizni batafsil bayon qiling.\n\n"
     f"<i>Kamida {TEXT_MIN} ta, koʻpi bilan {TEXT_MAX} ta belgi. "
-    "Faqat matn qabul qilinadi.</i>"
+    "Faqat matn qabul qilinadi. Bir nechta xabar yuborsangiz, ular bitta "
+    "murojaat matniga qoʻshiladi.</i>"
 )
 TEXT_TOO_SHORT = (
     f"⚠️ Murojaat juda qisqa (kamida {TEXT_MIN} ta belgi kerak). "
     "Vaziyatni batafsilroq yozing:"
+)
+TEXT_APPEND_TOO_LONG = (
+    "⚠️ Bu xabarni qoʻshib boʻlmadi: murojaat matni "
+    f"{TEXT_MAX} ta belgidan oshib ketadi. Murojaatni shu holicha yuborishingiz "
+    "yoki «✏️ Qaytadan toʻldirish» tugmasini bosishingiz mumkin."
 )
 TEXT_TOO_LONG = (
     "⚠️ Murojaat juda uzun ({length} ta belgi, ruxsat etilgani — "
@@ -217,9 +234,11 @@ TIMEOUT = (
     f"Qaytadan boshlash uchun «{BTN_APPEAL}» tugmasini bosing."
 )
 SESSION_LOST = (
-    "⚠️ Murojaat maʼlumotlari topilmadi (bot qayta ishga tushirilgan boʻlishi "
-    "mumkin). Iltimos, murojaatni qaytadan yuboring."
+    "⚠️ Toʻldirilayotgan murojaat maʼlumotlari topilmadi (kutish muddati "
+    "tugagan yoki bot qayta ishga tushirilgan boʻlishi mumkin). Murojaat "
+    f"yuborilmadi. Iltimos, «{BTN_APPEAL}» tugmasini bosib, qaytadan boshlang."
 )
+ALREADY_SENT = "Bu murojaat allaqachon yuborilgan: {appeal_id}"
 STALE_BUTTON = "Bu tugma eskirgan."
 
 # --- Admin -------------------------------------------------------------------

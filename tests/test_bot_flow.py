@@ -177,7 +177,7 @@ async def test_start_during_conversation_resets(bot: Harness):
 async def test_help_during_conversation_keeps_state(bot: Harness):
     await bot.text(msg.BTN_APPEAL)
     await bot.text("/help")
-    assert bot.last_text() == msg.HELP
+    assert bot.req.texts()[-2:] == [msg.HELP, msg.ASK_NAME]  # savol qayta beriladi
     await bot.text("Aliyev Vali")
     assert bot.last_text() == msg.ASK_PHONE
 
@@ -193,9 +193,23 @@ async def test_confirm_cancel_and_restart(bot: Harness):
     assert len(bot.store) == 0
 
 
-async def test_text_in_confirm_step_asks_to_press_button(bot: Harness):
+async def test_extra_message_in_confirm_step_is_appended(bot: Harness):
+    old_confirm = await fill_until_confirm(bot)
+    await bot.text("Qoʻshimcha: ish beruvchi yozma shartnoma bermagan.")
+    new_card = bot.last_text()
+    assert LONG_TEXT in new_card and "yozma shartnoma" in new_card
+    new_confirm = bot.last_message_id()
+    assert new_confirm != old_confirm
+
+    await bot.press(kb.CB_APPEAL_SEND, old_confirm)  # eski karta endi ishlamaydi
+    assert len(bot.store) == 0
+    await bot.press(kb.CB_APPEAL_SEND, new_confirm)
+    assert bot.store.page(1, 5)[0][0].text.endswith("yozma shartnoma bermagan.")
+
+
+async def test_non_text_in_confirm_step_asks_to_press_button(bot: Harness):
     await fill_until_confirm(bot)
-    await bot.text("yana bir narsa")
+    await bot.photo()
     assert bot.last_text() == msg.PRESS_BUTTON
 
 
@@ -204,7 +218,9 @@ async def test_double_click_creates_single_appeal(bot: Harness):
     await bot.press(kb.CB_APPEAL_SEND, confirm_id)
     await bot.press(kb.CB_APPEAL_SEND, confirm_id)
     assert len(bot.store) == 1
-    assert bot.req.of("answerCallbackQuery")[-1].get("text") == msg.STALE_BUTTON
+    assert bot.req.of("answerCallbackQuery")[-1].get("text") == msg.ALREADY_SENT.format(
+        appeal_id=f"APPEAL-{YEAR}-001"
+    )
 
 
 async def test_old_confirmation_message_is_stale(bot: Harness):

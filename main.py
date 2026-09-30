@@ -16,23 +16,25 @@ from telegram import (
     Update,
 )
 from telegram.constants import ParseMode
-from telegram.error import TelegramError
+from telegram.error import ChatMigrated, TelegramError
 from telegram.ext import Application, ApplicationBuilder, Defaults
 from telegram.request import BaseRequest
 
+import messages as msg
 from config import ConfigError, Settings, load_settings
 from handlers import register_handlers
+from handlers.utils import ADMIN_CHAT_OVERRIDE
 from storage import AppealStore
 
 logger = logging.getLogger("bot")
 
 USER_COMMANDS = [
-    BotCommand("start", "Botni ishga tushirish"),
-    BotCommand("murojaat", "Yangi murojaat yuborish"),
-    BotCommand("cancel", "Murojaatni bekor qilish"),
-    BotCommand("help", "Yordam"),
+    BotCommand("start", msg.CMD_START),
+    BotCommand("murojaat", msg.CMD_APPEAL),
+    BotCommand("cancel", msg.CMD_CANCEL),
+    BotCommand("help", msg.CMD_HELP),
 ]
-ADMIN_COMMANDS = [BotCommand("admin", "Murojaatlar roʻyxati")]
+ADMIN_COMMANDS = [BotCommand("admin", msg.CMD_ADMIN)]
 
 
 def setup_logging() -> None:
@@ -54,20 +56,31 @@ async def post_init(application: Application) -> None:
     logger.info("Bot ishga tushdi: @%s (id=%s)", me.username, me.id)
 
     await bot.set_my_commands(USER_COMMANDS, scope=BotCommandScopeAllPrivateChats())
+
+    admin_id = settings.admin_chat_id
     try:
-        await bot.get_chat(settings.admin_chat_id)
+        try:
+            await bot.get_chat(admin_id)
+        except ChatMigrated as exc:
+            logger.error(
+                "Admin guruhi superguruhga aylantirilgan: .env dagi ADMIN_CHAT_ID=%s ni %s "
+                "ga almashtiring. Hozircha yangi ID ishlatiladi.",
+                admin_id,
+                exc.new_chat_id,
+            )
+            admin_id = exc.new_chat_id
+            application.bot_data[ADMIN_CHAT_OVERRIDE] = admin_id
+            await bot.get_chat(admin_id)
         await bot.set_my_commands(
-            USER_COMMANDS + ADMIN_COMMANDS
-            if settings.admin_chat_id > 0
-            else ADMIN_COMMANDS,
-            scope=BotCommandScopeChat(settings.admin_chat_id),
+            USER_COMMANDS + ADMIN_COMMANDS if admin_id > 0 else ADMIN_COMMANDS,
+            scope=BotCommandScopeChat(admin_id),
         )
     except TelegramError as exc:
         logger.warning(
             "ADMIN_CHAT_ID=%s chatiga kirib bo'lmadi (%s). Admin avval botga /start "
             "yozishi yoki botni admin guruhiga qo'shishi kerak — aks holda yangi "
             "murojaatlar admin'ga yetib bormaydi.",
-            settings.admin_chat_id,
+            admin_id,
             exc,
         )
 

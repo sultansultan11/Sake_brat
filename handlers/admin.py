@@ -9,19 +9,20 @@ from telegram.ext import ContextTypes
 
 import keyboards as kb
 import messages as msg
-from handlers.utils import get_settings, get_store, safe_edit
+from handlers.utils import get_admin_chat_id, get_settings, get_store, safe_edit
 
 PER_PAGE = 5
 
 
 def is_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    """ADMIN_CHAT_ID — admin foydalanuvchi ID'si yoki admin guruh ID'si.
+    """/admin faqat ADMIN_CHAT_ID chatining o'zida ishlaydi.
 
-    Guruh ID'si berilgan bo'lsa, /admin shu guruh ichida ishlaydi.
+    ADMIN_CHAT_ID foydalanuvchi ID'si bo'lsa — shu admin bilan shaxsiy chatda,
+    guruh ID'si bo'lsa — shu guruh ichida. Boshqa har qanday chatda (hatto admin
+    o'zi yozsa ham) fuqarolarning ma'lumotlari ko'rsatilmaydi.
     """
-    admin_id = get_settings(context).admin_chat_id
-    chat, user = update.effective_chat, update.effective_user
-    return (chat is not None and chat.id == admin_id) or (user is not None and user.id == admin_id)
+    chat = update.effective_chat
+    return chat is not None and chat.id == get_admin_chat_id(context)
 
 
 def _render_page(
@@ -68,7 +69,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if data.startswith(kb.CB_ADMIN_PAGE):
         raw_page = data.removeprefix(kb.CB_ADMIN_PAGE)
-        page = int(raw_page) if raw_page.isdigit() else 1
+        page = int(raw_page) if raw_page.isdecimal() else 1
         await query.answer()
         text, markup = _render_page(context, page)
         await safe_edit(query, text, markup)
@@ -81,7 +82,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await query.answer(msg.ADMIN_NOT_FOUND, show_alert=True)
             return
         await query.answer()
-        page = int(raw_page) if raw_page.isdigit() else 1
+        page = int(raw_page) if raw_page.isdecimal() else 1
         text = msg.render_appeal(appeal, get_settings(context).timezone)
         await safe_edit(query, text, kb.admin_back(page))
         return
