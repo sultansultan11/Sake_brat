@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from telegram import Update
-from telegram.error import TelegramError
+from telegram.error import Conflict, TelegramError
 from telegram.ext import ContextTypes
 
 import messages as msg
@@ -14,6 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if isinstance(context.error, Conflict):
+        # Bir xil token bilan ikkinchi nusxa ishlayapti — uzun traceback o'rniga
+        # tushunarli ko'rsatma.
+        logger.error(
+            "DIQQAT: shu bot boshqa joyda ham ishlab turibdi (masalan, boshqa ochiq "
+            "oynada yoki boshqa kompyuterda). Faqat BITTA nusxani qoldiring, "
+            "qolganlarini yoping."
+        )
+        return
+
     logger.error("Update'ni qayta ishlashda xatolik: %r", update, exc_info=context.error)
 
     if isinstance(update, Update) and update.effective_chat is not None:
