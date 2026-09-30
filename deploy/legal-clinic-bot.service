@@ -1,0 +1,26 @@
+# systemd xizmati: bot server qayta yuklanganda ham, xatolikdan keyin ham
+# avtomatik qayta ishga tushadi.
+#
+# O'rnatish (yo'llarni o'zingiznikiga moslang):
+#   sudo cp deploy/legal-clinic-bot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now legal-clinic-bot
+# Log'larni ko'rish:
+#   journalctl -u legal-clinic-bot -f
+
+[Unit]
+Description=Yuridik klinika Telegram boti
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=botuser
+WorkingDirectory=/opt/legal-clinic-bot
+ExecStart=/opt/legal-clinic-bot/.venv/bin/python main.py
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
