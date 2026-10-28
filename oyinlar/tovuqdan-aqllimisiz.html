@@ -52,7 +52,8 @@ button{cursor:pointer}
 }
 .icon-btn:hover{background:rgba(0,0,0,.45)}
 .icon-btn svg{width:22px;height:22px}
-:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 6px #fff}
+.board .tile:focus-visible{outline:4px solid var(--blue);outline-offset:2px;box-shadow:0 0 0 7px #fff;z-index:2}
 
 /* ---------- ekranlar ---------- */
 .screen{min-height:100vh;min-height:100dvh}
@@ -169,7 +170,7 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 .empty-state b{display:block;color:var(--ink);font-size:1.05rem;margin-bottom:4px}
 
 /* ---------- o'yin ---------- */
-#screen-game{display:flex;flex-direction:column;align-items:stretch;padding:12px 16px 18px;color:#fff}
+#screen-game{display:flex;flex-direction:column;align-items:stretch;padding:12px 16px 18px;color:#fff;overflow-x:clip}
 .g-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .g-title{flex:1 1 260px;min-width:0}
 .g-title h1{font-family:var(--serif);font-size:clamp(1.15rem,2.6vw,1.55rem);margin:2px 0 0;line-height:1.2}
@@ -191,7 +192,7 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 #board-wrap{position:relative}
 .board{
   --n:4; --gap:8px;
-  width:min(560px, 92vw, calc(100vh - 250px)); width:min(560px, 92vw, calc(100dvh - 250px));
+  width:min(800px, 92vw, calc(100vh - 250px)); width:min(800px, 92vw, calc(100dvh - 250px));
   min-width:240px;
   aspect-ratio:1;display:grid;grid-template-columns:repeat(var(--n),1fr);grid-template-rows:repeat(var(--n),1fr);gap:var(--gap);
   padding:10px;border-radius:14px;background:#cbbfa8;box-shadow:inset 0 0 0 3px rgba(255,255,255,.25), var(--shadow);
@@ -279,6 +280,7 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 .status-pill{
   background:var(--cream);color:var(--ink);border-radius:999px;padding:.75em 1.4em;font-weight:700;box-shadow:var(--shadow);
   display:flex;align-items:center;gap:.55em;min-height:48px;text-align:center;max-width:92vw;
+  position:relative;z-index:7;
 }
 .status-pill svg{width:22px;height:22px;flex:none}
 .status-pill.chicken{background:rgba(0,0,0,.25);color:#fff;box-shadow:none;border:1.5px solid rgba(255,255,255,.25)}
@@ -286,20 +288,26 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 /* savol oynasi */
 #qpop{
   position:fixed;z-index:40;width:min(470px, calc(100vw - 24px));background:var(--cream);color:var(--ink);
-  border-radius:20px;box-shadow:0 18px 50px rgba(0,0,0,.45);padding:18px 20px 18px;
-  opacity:0;transform:translateY(8px) scale(.98);transition:opacity .2s, transform .2s;pointer-events:none;
-  max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;
+  border-radius:20px;box-shadow:0 18px 50px rgba(0,0,0,.45);
+  opacity:0;visibility:hidden;transform:translateY(8px) scale(.98);
+  transition:opacity .2s, transform .2s, visibility 0s .2s;pointer-events:none;
 }
-#qpop.show{opacity:1;transform:none;pointer-events:auto}
+#qpop.show{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}
+.qp-scroll{
+  position:relative;z-index:1;padding:18px 20px;border-radius:20px;background:var(--cream);
+  max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;
+}
 #qpop::after{
   content:"";position:absolute;width:18px;height:18px;background:var(--cream);transform:rotate(45deg);
-  left:var(--ax,50%);top:var(--ay,50%);margin:-9px 0 0 -9px;
+  left:var(--ax,50%);top:var(--ay,50%);margin:-9px 0 0 -9px;box-shadow:0 0 12px rgba(0,0,0,.25);
 }
+#qpop.dock::after{display:none}
 #qpop.side-top::after{top:100%}
 #qpop.side-bottom::after{top:0}
 #qpop.side-right::after{left:0}
 #qpop.side-left::after{left:100%}
 #qpop.sheet{left:50% !important;top:auto !important;bottom:12px;transform:translateX(-50%) translateY(10px)}
+#qpop.sheet.sheet-top{top:12px !important;bottom:auto}
 #qpop.sheet.show{transform:translateX(-50%)}
 #qpop.sheet::after{display:none}
 #qpop.center{left:50% !important;top:50% !important;transform:translate(-50%,-50%)}
@@ -312,7 +320,7 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 .qp-opt{
   border:2px solid transparent;border-radius:14px;padding:.75em .9em;text-align:left;font-weight:700;background:#fff;
   display:flex;align-items:center;gap:10px;box-shadow:0 1px 0 rgba(0,0,0,.08);transition:background .15s, border-color .15s, transform .1s, opacity .2s;
-  min-height:52px;overflow-wrap:anywhere;
+  min-height:52px;min-width:0;overflow-wrap:break-word;
 }
 .qp-opt .k{
   flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--cream2);font-size:.85rem;color:var(--muted)
@@ -329,6 +337,8 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 .qp-opt.wrong{border-color:var(--bad) !important;background:var(--bad-bg) !important;color:#8a2216 !important;opacity:1}
 .qp-opt.picked-chicken{border-color:var(--orange2) !important;box-shadow:0 0 0 3px rgba(236,143,60,.35)}
 .qp-opt .tag{margin-left:auto;font-size:.75rem;font-weight:800;opacity:.85;white-space:nowrap}
+.qp-opts.tf .qp-opt{flex-wrap:wrap;row-gap:2px}
+.qp-opts.tf .qp-opt .tag{flex-basis:100%;margin-left:0;text-align:center;white-space:normal}
 .qp-note{margin-top:12px;font-style:italic;color:var(--muted);font-weight:600}
 .qp-result{
   margin-top:12px;border-radius:12px;padding:.65em .85em;font-weight:700;display:flex;gap:8px;align-items:flex-start;
@@ -338,11 +348,15 @@ textarea.inp{resize:vertical;min-height:64px;line-height:1.4}
 .qp-result.neutral{background:var(--cream2);color:var(--ink)}
 .qp-exp{margin-top:8px;font-size:.95rem;color:#4b4333;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
 .qp-exp b{color:var(--ink)}
-.qp-foot{margin-top:14px;display:flex;justify-content:flex-end}
-.timer{height:6px;border-radius:6px;background:var(--cream2);overflow:hidden;margin-top:12px}
+.qp-result,.qp-exp{scroll-margin-bottom:84px}
+.qp-foot{
+  margin-top:14px;display:flex;justify-content:flex-end;
+  position:sticky;bottom:-18px;background:var(--cream);padding:10px 0 18px;
+}
+.timer{height:6px;border-radius:6px;background:var(--cream2);overflow:hidden;margin-top:2px}
 .timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ok),var(--gold));transform-origin:left;transition:background .3s}
 .timer.low i{background:var(--bad)}
-.timer-txt{font-size:.8rem;color:var(--muted);text-align:right;margin-top:3px}
+.timer-txt{font-size:.8rem;color:var(--muted);text-align:right;margin:3px 0 6px}
 
 /* ---------- natija ---------- */
 #screen-result{display:flex;align-items:flex-start;justify-content:center;padding:28px 16px}
@@ -414,7 +428,7 @@ details.review summary{cursor:pointer;padding:12px 14px;font-weight:700}
 }
 @media (max-width:480px){
   .ed-top .saved{display:none}
-  #g-full{display:none}
+  #g-full, #g-big{display:none}
   .g-tools{gap:6px}
   .g-tools .icon-btn{width:36px;height:36px}
   .g-tools .icon-btn svg{width:19px;height:19px}
@@ -423,6 +437,30 @@ details.review summary{cursor:pointer;padding:12px 14px;font-weight:700}
   .g-head{gap:8px}
   .qtools button{padding:5px}
 }
+/* telefon yotiq holatda: maydon chapda, savol oynasi o'ngda */
+@media (max-height:500px) and (orientation:landscape){
+  #screen-game{padding:6px 12px}
+  .g-title p{display:none}
+  .score-pill .cap{display:none}
+  .g-sub{margin-top:4px}
+  #stage{flex-direction:row;justify-content:flex-start;gap:12px;padding:6px 0}
+  .board{width:min(60vw, calc(100vh - 96px)); width:min(60vw, calc(100dvh - 96px)); min-width:0; --gap:4px; padding:6px}
+  .status-pill{max-width:none;flex:1;font-size:.9rem;padding:.6em 1em}
+}
+/* katta ekran / proyektor */
+@media (min-width:1600px) and (min-height:900px){
+  .qp-text{font-size:1.7rem}
+  .qp-opt{font-size:1.15rem}
+  #qpop{width:min(560px, calc(100vw - 24px))}
+}
+body.big #qpop{width:min(760px, calc(100vw - 24px))}
+body.big .qp-text{font-size:clamp(1.6rem,3vw,2.3rem)}
+body.big .qp-opt{font-size:1.3rem;min-height:64px}
+body.big .qp-result, body.big .qp-exp, body.big .qp-note{font-size:1.15rem}
+body.big .status-pill{font-size:1.2rem}
+#g-big{font-weight:800;font-size:1rem;font-family:var(--serif)}
+body.student .library, body.student #btn-edit, body.student #res-edit, body.student .home-foot span{display:none !important}
+#g-big[aria-pressed="true"]{background:var(--gold);color:#2a1d05}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
 }
@@ -571,6 +609,7 @@ details.review summary{cursor:pointer;padding:12px 14px;font-weight:700}
         <span class="score-side" title="Tovuqning eng katta yaxlit maydoni"><i class="sw c"></i><span id="sc-c">0</span><small>Tovuq</small></span>
       </div>
       <button class="icon-btn" id="g-sound" title="Ovoz" aria-label="Ovozni o‘chirish/yoqish"></button>
+      <button class="icon-btn" id="g-big" title="Katta shrift (proyektor uchun)" aria-label="Katta shrift" aria-pressed="false">A+</button>
       <button class="icon-btn" id="g-full" title="To‘liq ekran" aria-label="To‘liq ekran"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M5 5h5V3H3v7h2zm9-2v2h5v5h2V3zM5 14H3v7h7v-2H5zm14 5h-5v2h7v-7h-2z"/></svg></button>
       <button class="icon-btn" id="g-close" title="O‘yindan chiqish" aria-label="O‘yindan chiqish"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.3 7.1 16.9 5.7 12 10.6 7.1 5.7 5.7 7.1l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z"/></svg></button>
     </div>
@@ -612,23 +651,27 @@ details.review summary{cursor:pointer;padding:12px 14px;font-weight:700}
     <div class="res-actions">
       <button class="btn primary lg" id="res-again">Yana o‘ynash</button>
       <button class="btn gold" id="res-edit">Savollarni tahrirlash</button>
+      <button class="btn ghost" id="res-copy">Natijani nusxalash</button>
       <button class="btn ghost" id="res-home">Bosh sahifa</button>
     </div>
   </div>
 </section>
 
 <!-- savol oynasi -->
-<div id="qpop" role="dialog" aria-modal="false" aria-labelledby="qp-text">
-  <div class="qp-label" id="qp-label"></div>
-  <div class="qp-text" id="qp-text"></div>
-  <div class="qp-opts" id="qp-opts"></div>
-  <div class="timer" id="qp-timer" hidden><i></i></div>
-  <div class="timer-txt" id="qp-timer-txt" hidden></div>
-  <div class="qp-note" id="qp-note" hidden></div>
-  <div class="qp-result" id="qp-result" hidden></div>
-  <div class="qp-exp" id="qp-exp" hidden></div>
-  <div class="qp-foot" id="qp-foot" hidden><button class="btn dark" id="qp-next">Davom etish</button></div>
+<div id="qpop" role="dialog" aria-modal="false" aria-labelledby="qp-text" inert>
+  <div class="qp-scroll" id="qp-scroll">
+    <div class="qp-label" id="qp-label"></div>
+    <div class="qp-text" id="qp-text"></div>
+    <div class="timer" id="qp-timer" hidden><i></i></div>
+    <div class="timer-txt" id="qp-timer-txt" hidden></div>
+    <div class="qp-opts" id="qp-opts"></div>
+    <div class="qp-note" id="qp-note" hidden></div>
+    <div class="qp-result" id="qp-result" hidden></div>
+    <div class="qp-exp" id="qp-exp" hidden></div>
+    <div class="qp-foot" id="qp-foot" hidden><button class="btn dark" id="qp-next" aria-describedby="qp-result qp-exp">Davom etish</button></div>
+  </div>
 </div>
+<div id="qp-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
 <div id="modal-root"></div>
 <div id="toast" role="status"><span id="toast-msg"></span><button id="toast-act" hidden></button></div>
@@ -785,8 +828,9 @@ function defaultSettings() { return { grid: 4, skill: 'random', timer: 0, shuffl
 function emptySet() {
   return { id: uid(), title: 'Yangi to‘plam', subject: '', playerName: 'Siz', settings: defaultSettings(), updatedAt: Date.now(), questions: [] };
 }
+// correct = -1 — to'g'ri variant hali belgilanmagan (savol o'yinga kirmaydi)
 function newQuestion(type) {
-  return { id: uid(), type, text: '', answer: true, options: ['', '', '', ''], correct: 0, explain: '' };
+  return { id: uid(), type, text: '', answer: true, options: ['', '', '', ''], correct: -1, explain: '' };
 }
 
 /* ---------------------- saqlash ---------------------- */
@@ -818,12 +862,21 @@ function saveStore(now) {
     const s = $('#ed-saved');
     if (s) s.textContent = storageOK ? 'Saqlandi ✓' : 'Saqlab bo‘lmadi (xotira yopiq)';
   };
-  if (now) doSave(); else { const s = $('#ed-saved'); if (s) s.textContent = 'Saqlanmoqda…'; saveTimer = setTimeout(doSave, 400); }
+  saveTimer = null;
+  if (now) doSave(); else { const s = $('#ed-saved'); if (s) s.textContent = 'Saqlanmoqda…'; saveTimer = setTimeout(() => { saveTimer = null; doSave(); }, 400); }
 }
-function touch(set) { set.updatedAt = Date.now(); saveStore(); }
+// matn terilganda kechiktirib, tuzilmaviy o'zgarishlarda darhol saqlanadi
+function touch(set, now) { set.updatedAt = Date.now(); saveStore(now); }
+// sahifa yopilayotganda kutilayotgan saqlashni yo'qotmaslik
+const flushSave = () => { if (saveTimer) saveStore(true); };
+window.addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
 
 /* Tashqi (JSON / havola) ma'lumotni xavfsiz ko'rinishga keltirish */
+const MAX_QUESTIONS = 500;
+let lastDropped = 0; // normalizeSet sig'magani uchun tashlab yuborgan savollar soni
 function normalizeSet(raw) {
+  lastDropped = 0;
   if (!raw || typeof raw !== 'object') return null;
   const str = (v, max) => (typeof v === 'string' ? v : v == null ? '' : String(v)).slice(0, max);
   const st = raw.settings || {};
@@ -843,15 +896,22 @@ function normalizeSet(raw) {
     questions: [],
   };
   const qs = Array.isArray(raw.questions) ? raw.questions : [];
-  for (const q of qs.slice(0, 500)) {
+  lastDropped = Math.max(0, qs.length - MAX_QUESTIONS);
+  const seen = new Set();
+  for (const q of qs.slice(0, MAX_QUESTIONS)) {
     if (!q || typeof q !== 'object') continue;
-    const type = q.type === 'mc' ? 'mc' : 'tf';
+    const filled = Array.isArray(q.options) ? q.options.filter(o => typeof o === 'string' && o.trim()).length : 0;
+    // "type" ko'rsatilmagan, lekin variantlari bor savol — variantli test
+    const type = q.type === 'mc' || (q.type !== 'tf' && filled >= 2) ? 'mc' : 'tf';
     let options = Array.isArray(q.options) ? q.options.slice(0, MAX_OPTS).map(o => str(o, 300)) : [];
     while (options.length < 2) options.push('');
-    let correct = Number.isInteger(+q.correct) ? +q.correct : 0;
-    if (correct < 0 || correct >= options.length) correct = 0;
+    let correct = q.correct !== '' && q.correct != null && Number.isInteger(+q.correct) ? +q.correct : -1;
+    if (correct < -1 || correct >= options.length) correct = -1;
+    let id = typeof q.id === 'string' && q.id ? q.id.slice(0, 40) : uid();
+    if (seen.has(id)) id = uid();
+    seen.add(id);
     set.questions.push({
-      id: typeof q.id === 'string' && q.id ? q.id.slice(0, 40) : uid(),
+      id,
       type, text: str(q.text, 1000), answer: q.answer !== false && q.answer !== 'false',
       options, correct, explain: str(q.explain, 1000),
     });
@@ -860,7 +920,7 @@ function normalizeSet(raw) {
 }
 
 let store = loadStore();
-const curSet = () => store.sets.find(s => s.id === store.currentId) || store.sets[0];
+const curSet = () => studentSet || store.sets.find(s => s.id === store.currentId) || store.sets[0];
 
 /* ---------------------- savol tekshiruvi ---------------------- */
 function qProblem(q) {
@@ -868,7 +928,8 @@ function qProblem(q) {
   if (q.type === 'mc') {
     const filled = q.options.filter(o => o.trim()).length;
     if (filled < 2) return 'Kamida 2 ta variant kerak';
-    if (!(q.options[q.correct] || '').trim()) return 'To‘g‘ri variant belgilanmagan yoki bo‘sh';
+    if (q.correct < 0) return 'To‘g‘ri javob belgilanmagan — variant yonidagi doirachani bosing';
+    if (!(q.options[q.correct] || '').trim()) return 'To‘g‘ri deb belgilangan variant bo‘sh';
   }
   return '';
 }
@@ -1022,10 +1083,15 @@ function renderHome() {
       if (!await confirmBox('To‘plamni o‘chirasizmi?', `«${s.title}» va undagi ${s.questions.length} ta savol o‘chiriladi.`, 'O‘chirish', true)) return;
       const idx = store.sets.indexOf(s);
       store.sets.splice(idx, 1);
-      if (!store.sets.length) store.sets.push(emptySet());
+      let placeholder = null;
+      if (!store.sets.length) { placeholder = emptySet(); store.sets.push(placeholder); }
       if (store.currentId === s.id) store.currentId = store.sets[Math.min(idx, store.sets.length - 1)].id;
       saveStore(true); renderHome();
-      toast('To‘plam o‘chirildi', { label: 'Qaytarish', fn: () => { store.sets.splice(Math.min(idx, store.sets.length), 0, s); store.currentId = s.id; saveStore(true); renderHome(); } });
+      toast('To‘plam o‘chirildi', { label: 'Qaytarish', fn: () => {
+        if (placeholder && store.sets.length === 1 && store.sets[0] === placeholder && !placeholder.questions.length) store.sets = [];
+        store.sets.splice(Math.min(idx, store.sets.length), 0, s); store.currentId = s.id; saveStore(true);
+        if (screen === 'home') renderHome(); else if (screen === 'editor') renderEditor();
+      } });
     } });
     item.append(pick, ed, dup, del);
     list.append(item);
@@ -1051,6 +1117,7 @@ $('#btn-help').onclick = () => showHelp();
 
 /* ======================= MUHARRIR ======================= */
 function openEditor() {
+  if (studentSet) return; // o'quvchi rejimida tahrirlash yo'q
   renderEditor();
   show('editor');
 }
@@ -1080,7 +1147,9 @@ function updateSummary() {
     if (ok && ok < cells) { txt += ` Maydonda ${cells} ta plitka bor — savollar takrorlanishi mumkin.`; warn = true; }
   }
   s.textContent = txt; s.classList.toggle('warn', warn);
-  $('#s-grid-hint').textContent = ok ? `Savollar soni: ${ok}. ${ok >= cells ? 'Takrorlanmaydi.' : 'Kamroq savolli maydon tanlansa, takror bo‘lmaydi.'}` : '';
+  const fit = [5, 4, 3].find(k => k * k <= ok);
+  $('#s-grid-hint').textContent = !ok ? '' : `Savollar soni: ${ok}. ` + (ok >= cells ? 'Savollar takrorlanmaydi.'
+    : fit ? `Takrorlanmasligi uchun ${fit}×${fit} maydonni tanlang.` : 'Takrorlanmasligi uchun kamida 9 ta savol kerak.');
   $('#ed-play').disabled = ok === 0;
   $('#ed-heading').textContent = set.title || 'To‘plamni tahrirlash';
 }
@@ -1167,11 +1236,10 @@ $('#q-list').addEventListener('change', e => {
     refreshValidity(card, q);
   } else if (e.target.dataset.act === 'type') {
     q.type = e.target.value;
-    if (q.type === 'mc' && q.options.every(o => !o.trim()) && q.options.length < 2) q.options = ['', '', '', ''];
     refreshCard(q);
     const nc = $(`.qcard[data-id="${CSS.escape(q.id)}"] .qtype`); if (nc) nc.focus();
   } else return;
-  touch(curSet());
+  touch(curSet(), true);
 });
 $('#q-list').addEventListener('click', e => {
   const b = e.target.closest('button[data-act]'); if (!b) return;
@@ -1183,11 +1251,16 @@ $('#q-list').addEventListener('click', e => {
     const nb = $(`.qcard[data-id="${CSS.escape(q.id)}"] [data-act="${act}"]`);
     if (nb && !nb.disabled) nb.focus(); else $(`.qcard[data-id="${CSS.escape(q.id)}"] .qtype`).focus();
   } else if (act === 'dup') {
+    if (qs.length >= MAX_QUESTIONS) { toast(`Bitta to‘plamda ${MAX_QUESTIONS} tadan ortiq savol bo‘lishi mumkin emas`); return; }
     const c = JSON.parse(JSON.stringify(q)); c.id = uid(); qs.splice(i + 1, 0, c); renderQList();
     $(`.qcard[data-id="${CSS.escape(c.id)}"] .qtext`).focus();
   } else if (act === 'del') {
     qs.splice(i, 1); renderQList();
-    toast('Savol o‘chirildi', { label: 'Qaytarish', fn: () => { if (curSet() !== set) return; set.questions.splice(Math.min(i, set.questions.length), 0, q); touch(set); if (screen === 'editor') renderQList(); } });
+    toast('Savol o‘chirildi', { label: 'Qaytarish', fn: () => {
+      if (!store.sets.includes(set)) return;
+      set.questions.splice(Math.min(i, set.questions.length), 0, q); touch(set, true);
+      if (screen === 'editor' && curSet() === set) renderQList(); else if (screen === 'home') renderHome();
+    } });
   } else if (act === 'addopt') {
     if (q.options.length >= MAX_OPTS) return;
     q.options.push(''); refreshCard(q);
@@ -1195,10 +1268,11 @@ $('#q-list').addEventListener('click', e => {
   } else if (act === 'rmopt') {
     const k = +b.dataset.k; if (q.options.length <= 2) return;
     q.options.splice(k, 1);
-    if (q.correct === k) q.correct = 0; else if (q.correct > k) q.correct--;
+    if (q.correct === k) { q.correct = -1; toast('To‘g‘ri deb belgilangan variant o‘chirildi — yangi to‘g‘ri javobni belgilang'); }
+    else if (q.correct > k) q.correct--;
     refreshCard(q);
   } else return;
-  touch(set);
+  touch(set, true);
 });
 
 function bindSetting(sel, fn) { $$(sel).forEach(inp => inp.addEventListener('change', () => { fn(inp); touch(curSet()); updateSummary(); })); }
@@ -1213,7 +1287,8 @@ bindSetting('#s-shuffle-opts', i => { curSet().settings.shuffleOpts = i.checked;
 
 function addQuestion(type) {
   const set = curSet(), q = newQuestion(type);
-  set.questions.push(q); touch(set); renderQList();
+  if (set.questions.length >= MAX_QUESTIONS) { toast(`Bitta to‘plamda ${MAX_QUESTIONS} tadan ortiq savol bo‘lishi mumkin emas`); return; }
+  set.questions.push(q); touch(set, true); renderQList();
   const t = $(`.qcard[data-id="${CSS.escape(q.id)}"] .qtext`);
   t.scrollIntoView({ behavior: 'smooth', block: 'center' }); t.focus({ preventScroll: true });
 }
@@ -1224,53 +1299,115 @@ $('#ed-play').onclick = () => { saveStore(true); startGame(); };
 $('#clear-all').onclick = async () => {
   const set = curSet(); if (!set.questions.length) return;
   if (!await confirmBox('Barcha savollarni o‘chirasizmi?', `${set.questions.length} ta savol o‘chiriladi.`, 'O‘chirish', true)) return;
-  const backup = set.questions; set.questions = []; touch(set); renderQList();
-  toast('Savollar o‘chirildi', { label: 'Qaytarish', fn: () => { set.questions = backup; touch(set); if (screen === 'editor') renderQList(); } });
+  const backup = set.questions; set.questions = []; touch(set, true); renderQList();
+  toast('Savollar o‘chirildi', { label: 'Qaytarish', fn: () => {
+    if (!store.sets.includes(set)) return;
+    set.questions = backup; touch(set, true);
+    if (screen === 'editor' && curSet() === set) renderQList(); else if (screen === 'home') renderHome();
+  } });
 };
 
 /* ---------------------- matndan ommaviy qo'shish ---------------------- */
-const normKey = s => s.toLowerCase().replace(/[ʻʼ‘’`´']/g, "'").replace(/[.!\s]+$/g, '').replace(/^[\s*+]+/, '').trim();
-const TRUE_WORDS = new Set(["to'g'ri", "togri", "rost", "ha", "true", "t", "+", "durıs", "durys", "duris", "верно", "правда", "да", "иә", "ia", "ıa"]);
-const FALSE_WORDS = new Set(["noto'g'ri", "notogri", "yolg'on", "yolgon", "yo'q", "yoq", "false", "f", "-", "nadurıs", "nadurys", "naduris", "qáte", "qate", "неверно", "ложь", "нет", "joq", "жоқ"]);
+const APOS_RE = /[ʻʼ‘’`´']/g;
+const normKey = s => s.toLowerCase().replace(APOS_RE, "'").replace(/[.!\s]+$/g, '').replace(/^[\s*+]+(?=\S)/, '').trim();
+const TRUE_WORDS = new Set(["to'g'ri", "rost", "ha", "true", "t", "+", "durıs", "durys", "duris", "иә", "ia", "ıa",
+  "верно", "правда", "да", "правильно", "истина", "тўғри", "тугри", "ҳа", "ха"]);
+const FALSE_WORDS = new Set(["noto'g'ri", "yolg'on", "yo'q", "xato", "false", "f", "-", "nadurıs", "nadurys", "naduris", "qáte", "qate", "joq", "жоқ",
+  "неверно", "ложь", "нет", "неправильно", "нотўғри", "нотугри", "йўқ", "йук", "хато"]);
+const stripApos = set => new Set([...set].map(w => w.replace(/'/g, '')));
+const TRUE_LOOSE = stripApos(TRUE_WORDS), FALSE_LOOSE = stripApos(FALSE_WORDS);
+// "To‘g‘ri" / "Noto‘g‘ri" va ularning boshqa tillardagi, apostrofsiz yozilgan shakllari
+function tfToken(s) {
+  const k = normKey(s), loose = k.replace(/'/g, '');
+  if (TRUE_WORDS.has(k) || TRUE_LOOSE.has(loose)) return true;
+  if (FALSE_WORDS.has(k) || FALSE_LOOSE.has(loose)) return false;
+  return null;
+}
+const ANSWER_RE = /^(?:to['ʻʼ‘’`]?g['ʻʼ‘’`]?ri\s+|правильный\s+|верный\s+|durıs\s+)?(?:javob|ответ|juwap|answer)\s*[:\-–—]\s*(.+)$/i;
+const EXPLAIN_RE = /^(?:(?:izoh|tushuntirish|пояснение|комментарий|túsindirme|tusindirme|túsinik)\s*[:\-–—]|>)\s*(.*)$/i;
+const MARK_PAREN_RE = /\s*\((?:to['ʻʼ‘’`]?g['ʻʼ‘’`]?ri|correct|верно|правильно|durıs)\)$/i;
+// savol raqamini olib tashlash: "1." "12)" "IV." "3 - " — lekin "1945-yil", "12:00", "I. Nyuton" saqlanadi
+const stripQNum = l => l
+  .replace(/^(?:\d{1,3}|[IVX]{2,5})\s*[.)](?!\d)\s*/, '')
+  .replace(/^\d{1,3}\s*[-–:]\s+/, '')
+  .replace(/^(?:savol|вопрос|soraw)\s*\d{0,3}\s*[:.\-–]\s*/i, '');
+function parseOpt(line) {
+  let s = line, mark = false, numbered = '';
+  const lead = () => { if (/^[*+✓✔]/.test(s)) { mark = true; s = s.replace(/^[*+✓✔]\s*/, ''); } };
+  lead();
+  const m = s.match(/^([A-Fa-fА-Еа-е]|\d)\s*(?:\)\s*|[.:\-]\s+)/);
+  if (m) { numbered = /\d/.test(m[1]) ? 'digit' : 'letter'; s = s.slice(m[0].length); }
+  else s = s.replace(/^[-–•]\s+/, '');
+  lead();
+  const suf = /(?:\s+[*+✓✔]|[*✓✔])$/; // "C++" saqlanishi uchun "+" faqat bo'shliqdan keyin
+  if (suf.test(s)) { mark = true; s = s.replace(suf, ''); }
+  if (MARK_PAREN_RE.test(s)) { mark = true; s = s.replace(MARK_PAREN_RE, ''); }
+  return { text: s.trim().slice(0, 300), mark, numbered };
+}
+// Bo'sh qator bo'lmasa ham raqamlangan keyingi savolni alohida blokka ajratish
+function splitBlocks(text) {
+  const blocks = []; let cur = [];
+  const push = () => { if (cur.length) blocks.push(cur); cur = []; };
+  const isLetterOpt = l => /^[*+]?\s*[A-Fa-fА-Еа-е]\s*(?:\)|[.:]\s)/.test(l);
+  for (const raw of text.replace(/\r\n?/g, '\n').split('\n')) {
+    const l = raw.trim();
+    if (!l) { push(); continue; }
+    const num = l.match(/^(\d{1,3})\s*([.)])\s*\S/);
+    if (num && cur.length >= 2) {
+      const body = cur.slice(1), first = cur[0].match(/^(\d{1,3})\s*([.)])/);
+      const finished = body.some(x => ANSWER_RE.test(x) || EXPLAIN_RE.test(x) || isLetterOpt(x)) ||
+        (body.length === 1 && tfToken(body[0]) != null) ||
+        (first && +num[1] === +first[1] + 1 && num[2] === first[2] && !body.some(x => new RegExp('^\\d{1,3}\\s*\\' + first[2]).test(x)));
+      if (finished) push();
+    }
+    cur.push(l);
+  }
+  push();
+  return blocks;
+}
 function parseBulk(text) {
-  const blocks = text.replace(/\r/g, '').split(/\n\s*\n/).map(b => b.split('\n').map(l => l.trim()).filter(Boolean)).filter(b => b.length);
   const out = [], errors = [];
-  blocks.forEach((lines, bi) => {
-    let qline = lines[0].replace(/^(\d+|[IVXLC]+)\s*[.)\-:]\s*/i, '').replace(/^(savol|вопрос|soraw|sorаw)\s*[:.\-]\s*/i, '');
+  splitBlocks(text).forEach((lines, bi) => {
+    const qline = stripQNum(lines[0]).slice(0, 1000);
+    const where = `${bi + 1}-savol («${qline.slice(0, 40)}${qline.length > 40 ? '…' : ''}»)`;
     let explain = '', answerHint = null;
     const rest = [];
     for (const l of lines.slice(1)) {
-      const mExp = l.match(/^(izoh|tushuntirish|пояснение|комментарий|tú?sindirme|túsinik|>)\s*[:\-]?\s*(.*)$/i);
-      const mAns = l.match(/^(javob|ответ|juwap|answer)\s*[:\-]\s*(.+)$/i);
-      if (mExp && (l.startsWith('>') || /[:\-]/.test(l.slice(mExp[1].length, mExp[1].length + 3)))) { explain = (explain ? explain + ' ' : '') + mExp[2].trim(); continue; }
-      if (mAns) { answerHint = mAns[2].trim(); continue; }
-      rest.push(l);
+      const mAns = l.match(ANSWER_RE), mExp = l.match(EXPLAIN_RE);
+      if (mAns) answerHint = mAns[1].trim();
+      else if (mExp) explain = (explain ? explain + ' ' : '') + mExp[1].trim();
+      else rest.push(l);
     }
-    const q = newQuestion('tf'); q.text = qline; q.explain = explain;
-    const tfToken = s => { const k = normKey(s); return TRUE_WORDS.has(k) ? true : FALSE_WORDS.has(k) ? false : null; };
+    const q = newQuestion('tf'); q.text = qline; q.explain = explain.slice(0, 1000);
+    if (!qline) { errors.push(`${bi + 1}-blok: savol matni bo‘sh`); return; }
     // To'g'ri / Noto'g'ri savol
     if (rest.length === 0 && answerHint != null && tfToken(answerHint) != null) { q.answer = tfToken(answerHint); out.push(q); return; }
     if (rest.length === 1 && tfToken(rest[0]) != null) { q.answer = tfToken(rest[0]); out.push(q); return; }
-    if (rest.length === 0) { errors.push(`${bi + 1}-blok: «${qline.slice(0, 40)}» — javob yoki variantlar topilmadi`); return; }
+    if (rest.length === 0) { errors.push(`${where}: javob yoki variantlar topilmadi`); return; }
+    if (rest.length === 1) { errors.push(`${where}: «${rest[0].slice(0, 30)}» tanilmadi — «To‘g‘ri» yoki «Noto‘g‘ri» deb yozing yoki kamida 2 ta variant bering`); return; }
     // Variantli savol
-    q.type = 'mc'; q.options = []; q.correct = -1;
-    for (const l of rest.slice(0, MAX_OPTS)) {
-      let s = l, mark = false;
-      if (/^[*+✓✔]/.test(s)) { mark = true; s = s.replace(/^[*+✓✔]\s*/, ''); }
-      s = s.replace(/^(?:[A-Fa-fА-Еа-е]|\d)\s*[).:\-]\s+/, '').replace(/^[-–•]\s+/, '');
-      if (/\s*[*✓✔]$/.test(s) || /\((to'g'ri|to‘g‘ri|correct|верно)\)$/i.test(s)) { mark = true; s = s.replace(/\s*[*✓✔]$/, '').replace(/\s*\((to'g'ri|to‘g‘ri|correct|верно)\)$/i, ''); }
-      if (mark && q.correct < 0) q.correct = q.options.length;
-      q.options.push(s.trim());
-    }
+    const opts = rest.slice(0, MAX_OPTS).map(parseOpt);
+    q.type = 'mc'; q.options = opts.map(o => o.text);
+    const marked = opts.map((o, i) => o.mark ? i : -1).filter(i => i >= 0);
+    q.correct = marked.length ? marked[0] : -1;
+    if (marked.length > 1) errors.push(`${where}: bir nechta variant belgilangan — birinchisi to‘g‘ri deb olindi`);
     if (q.correct < 0 && answerHint) {
-      const h = answerHint.replace(/[).]$/, '').trim();
-      const li = /^[A-Fa-f]$/.test(h) ? LETTERS.indexOf(h.toUpperCase()) : /^[А-Еа-е]$/.test(h) ? 'АБВГДЕ'.indexOf(h.toUpperCase()) : /^\d$/.test(h) ? +h - 1 : -1;
-      if (li >= 0 && li < q.options.length) q.correct = li;
-      else { const ti = q.options.findIndex(o => o.toLowerCase() === h.toLowerCase()); if (ti >= 0) q.correct = ti; }
+      const h = answerHint.replace(/[).]\s*$/, '').trim();
+      let ci = q.options.findIndex(o => o.toLowerCase() === h.toLowerCase()); // avval matn bo'yicha
+      if (ci < 0) {
+        const allNumeric = q.options.every(o => /^-?\d+([.,]\d+)?$/.test(o));
+        const lm = h.match(/^([A-Fa-f])(?:\s*[).]\s*.*)?$/), cm = h.match(/^([А-Еа-е])(?:\s*[).]\s*.*)?$/);
+        if (lm) ci = LETTERS.indexOf(lm[1].toUpperCase());
+        else if (cm) ci = 'АБВГДЕ'.indexOf(cm[1].toUpperCase());
+        else if (/^\d$/.test(h) && (opts.some(o => o.numbered === 'digit') || !allNumeric)) ci = +h - 1;
+      }
+      if (ci >= 0 && ci < q.options.length) q.correct = ci;
+      else errors.push(`${where}: «Javob: ${h.slice(0, 20)}» variantlar orasidan topilmadi`);
     }
-    if (q.options.length < 2) { errors.push(`${bi + 1}-blok: «${qline.slice(0, 40)}» — kamida 2 ta variant kerak`); return; }
-    if (q.correct < 0) { errors.push(`${bi + 1}-blok: «${qline.slice(0, 40)}» — to‘g‘ri variant belgilanmagan (* bilan belgilang); qo‘shildi, keyin belgilang`); q.correct = 0; q._unmarked = true; }
-    if (rest.length > MAX_OPTS) errors.push(`${bi + 1}-blok: ${MAX_OPTS} tadan ortiq variant — ortiqchasi tashlab yuborildi`);
+    if (q.options.filter(Boolean).length < 2) { errors.push(`${where}: kamida 2 ta variant kerak`); return; }
+    if (q.correct < 0) errors.push(`${where}: to‘g‘ri variant belgilanmagan (* bilan belgilang). Savol qo‘shiladi, lekin javobni belgilamaguningizcha o‘yinda ishlatilmaydi`);
+    if (rest.length > MAX_OPTS) errors.push(`${where}: ${MAX_OPTS} tadan ortiq variant — ortiqchasi tashlab yuborildi. Savollar orasiga bo‘sh qator qo‘yishni unutmadingizmi?`);
+    else if (q.options.some(o => /\?\s*$/.test(o))) errors.push(`${where}: variantlardan biri savolga o‘xshaydi — savollar orasiga bo‘sh qator qo‘ying`);
     out.push(q);
   });
   return { questions: out, errors };
@@ -1313,9 +1450,14 @@ function openBulk() {
   };
   ta.addEventListener('input', update);
   const apply = replace => {
-    const set = curSet(), qs = parsed.questions.map(q => { delete q._unmarked; return q; });
+    const set = curSet();
+    let qs = parsed.questions;
+    const room = MAX_QUESTIONS - (replace ? 0 : set.questions.length);
+    if (qs.length > room) { toast(`Sig‘madi: bitta to‘plamda ko‘pi bilan ${MAX_QUESTIONS} ta savol. ${Math.max(0, room)} tasi qo‘shildi`); qs = qs.slice(0, Math.max(0, room)); }
     if (replace) set.questions = qs; else set.questions.push(...qs);
-    touch(set); closeModal(); renderQList(); toast(`${qs.length} ta savol qo‘shildi`);
+    touch(set, true); closeModal(); renderQList();
+    const unmarked = qs.filter(q => qProblem(q)).length;
+    if (qs.length) toast(`${qs.length} ta savol qo‘shildi` + (unmarked ? ` — ${unmarked} tasida to‘g‘ri javobni belgilang (sariq kartochkalar)` : ''), null, unmarked ? 6000 : 3200);
   };
   addBtn.onclick = () => apply(false);
   repBtn.onclick = async () => {
@@ -1356,32 +1498,39 @@ $('#file-input').addEventListener('change', async e => {
   const file = e.target.files[0]; e.target.value = '';
   if (!file) return;
   try {
-    if (file.size > 5e6) throw new Error('Fayl juda katta');
+    if (file.size > 5e6) throw new Error('fayl juda katta');
     const data = JSON.parse(await file.text());
+    if (!Array.isArray(data) && !(data && Array.isArray(data.questions))) throw new Error('bu fayl savollar to‘plami emas');
     const set = normalizeSet(Array.isArray(data) ? { title: file.name.replace(/\.json$/i, ''), questions: data } : data);
-    if (!set) throw new Error('Format noto‘g‘ri');
+    if (!set) throw new Error('bu fayl savollar to‘plami emas');
+    const dropped = lastDropped ? ` (${lastDropped} tasi sig‘madi: ko‘pi bilan ${MAX_QUESTIONS} ta)` : '';
     if (importTarget === 'current') {
       const cur = curSet();
       const mode = await chooseImportMode(cur, set);
       if (!mode) return;
-      if (mode === 'append') cur.questions.push(...set.questions.map(q => ({ ...q, id: uid() })));
-      else { const keep = cur.id; Object.assign(cur, set, { id: keep }); }
-      touch(cur); renderEditor(); toast(`${set.questions.length} ta savol yuklandi`);
+      if (mode === 'append') {
+        const room = Math.max(0, MAX_QUESTIONS - cur.questions.length);
+        const add = set.questions.slice(0, room).map(q => ({ ...q, id: uid() }));
+        cur.questions.push(...add);
+        toast(`${add.length} ta savol qo‘shildi` + (add.length < set.questions.length ? ` (${set.questions.length - add.length} tasi sig‘madi)` : dropped));
+      } else { const keep = cur.id; Object.assign(cur, set, { id: keep }); toast(`${set.questions.length} ta savol yuklandi${dropped}`); }
+      touch(cur, true); renderEditor();
     } else {
       set.id = uid(); store.sets.push(set); store.currentId = set.id; saveStore(true); renderHome();
-      toast(`«${set.title}» to‘plami qo‘shildi (${set.questions.length} ta savol)`);
+      toast(`«${set.title}» qo‘shildi: ${set.questions.length} ta savol${dropped}`);
     }
   } catch (err) {
-    toast('Faylni o‘qib bo‘lmadi: ' + (err.message || 'noto‘g‘ri JSON'));
+    toast('Faylni o‘qib bo‘lmadi: ' + (err instanceof SyntaxError ? 'fayl JSON formatida emas' : (err.message || 'noto‘g‘ri fayl')));
   }
 });
 function chooseImportMode(cur, set) {
-  if (!cur.questions.length) return Promise.resolve('replace');
+  // hali hech narsa kiritilmagan to'plam bo'lsa — so'ramasdan almashtiramiz
+  if (!cur.questions.length && (!cur.title || cur.title === 'Yangi to‘plam') && !cur.subject) return Promise.resolve('replace');
   return new Promise(res => {
     let done = false; const fin = v => { if (!done) { done = true; res(v); } };
     openModal(el('div', {},
       el('h2', { text: 'Savollar qanday yuklansin?' }),
-      el('p', { text: `Faylda ${set.questions.length} ta savol bor. Hozirgi to‘plamda ${cur.questions.length} ta savol mavjud.` }),
+      el('p', { text: `Faylda ${set.questions.length} ta savol bor. Hozirgi «${cur.title}» to‘plamida ${cur.questions.length} ta savol mavjud.` }),
       el('div', { class: 'actions' },
         el('button', { class: 'btn ghost', text: 'Bekor qilish', onclick: () => { fin(null); closeModal(); } }),
         el('button', { class: 'btn gold', text: 'Almashtirish (nomi va sozlamalari bilan)', onclick: () => { fin('replace'); closeModal(); } }),
@@ -1427,21 +1576,33 @@ async function decodeSet(code) {
   else throw new Error('Havola noto‘g‘ri');
   return normalizeSet(JSON.parse(json));
 }
+async function copyText(text, fallbackInput) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    if (fallbackInput) { fallbackInput.focus(); fallbackInput.select(); }
+    try { return document.execCommand('copy'); } catch (e2) { return false; }
+  }
+}
 $('#share-link').onclick = async () => {
   const set = curSet();
   const code = await encodeSet(set);
   const base = location.href.split('#')[0];
-  const url = base + '#t=' + code;
   const isFile = location.protocol === 'file:';
   const inp = el('textarea', { class: 'inp', rows: 4, readonly: true, 'aria-label': 'Havola', style: 'font-size:.82rem;word-break:break-all' });
-  inp.value = url;
+  const student = el('input', { type: 'checkbox', checked: true });
+  const linkOf = () => base + '#t=' + code + (student.checked ? '&o=1' : '');
+  inp.value = linkOf();
+  student.addEventListener('change', () => { inp.value = linkOf(); });
   const copyBtn = el('button', { class: 'btn primary', text: 'Nusxa olish', onclick: async () => {
-    try { await navigator.clipboard.writeText(url); toast('Havola nusxalandi'); }
-    catch (e) { inp.focus(); inp.select(); try { document.execCommand('copy'); toast('Havola nusxalandi'); } catch (e2) { toast('Ctrl+C bilan nusxa oling'); } }
+    toast(await copyText(inp.value, inp) ? 'Havola nusxalandi' : 'Ctrl+C bilan nusxa oling');
   } });
+  const url = inp.value;
   openModal(el('div', {},
     el('h2', { text: 'Havola orqali ulashish' }),
     el('p', { text: 'Barcha savollar havolaning o‘ziga joylangan. Havolani ochgan o‘quvchi shu to‘plam bilan darhol o‘ynay oladi.' }),
+    el('div', { class: 'checks', style: 'margin:0 0 6px' }, el('label', {}, student,
+      el('span', { html: '<b>O‘quvchi rejimi</b> — savollarni tahrirlash va javoblarni ko‘rish tugmalari yashiriladi' }))),
+    el('p', { class: 'opts-hint', text: 'Eslatma: bu himoya emas, faqat qulaylik — javoblar havola ichida siqilgan holda turadi.' }),
     isFile ? el('p', { class: 'qwarn', text: '⚠ O‘yin hozir kompyuterdagi fayldan ochilgan. Havola boshqalarda ishlashi uchun .html faylni internetga (masalan, GitHub Pages, Google Sites yoki maktab saytiga) joylang. Aks holda o‘quvchilarga JSON faylni yuboring.' }) : null,
     url.length > 8000 ? el('p', { class: 'qwarn', text: `⚠ Havola juda uzun (${url.length} belgi) — ayrim messenjerlar uni qisqartirib yuborishi mumkin. Bunday holda JSON fayldan foydalaning.` }) : null,
     inp,
@@ -1449,11 +1610,12 @@ $('#share-link').onclick = async () => {
   setTimeout(() => { inp.focus(); inp.select(); }, 40);
 };
 async function loadFromHash() {
-  const m = location.hash.match(/^#t=([A-Za-z0-9_-]+)$/);
+  const m = location.hash.match(/^#t=([A-Za-z0-9_-]+)(&o=1)?$/);
   if (!m) return;
   try {
     const set = await decodeSet(m[1]);
-    if (!set) throw new Error();
+    if (!set || !set.questions.length) throw new Error();
+    if (m[2]) { enterStudentMode(set); return; }
     const sig = JSON.stringify(compactSet(set));
     let existing = store.sets.find(s => JSON.stringify(compactSet(s)) === sig);
     if (!existing) { set.id = uid(); store.sets.unshift(set); existing = set; }
@@ -1462,8 +1624,17 @@ async function loadFromHash() {
     renderHome();
     toast(`Havoladan «${existing.title}» to‘plami yuklandi`);
   } catch (e) {
-    toast('Havoladagi savollarni o‘qib bo‘lmadi');
+    history.replaceState(null, '', location.href.split('#')[0]);
+    toast('Havoladagi savollarni o‘qib bo‘lmadi — havola to‘liq nusxalanganini tekshiring');
   }
+}
+/* O'quvchi rejimi: to'plam faqat xotirada, tahrirlash va kutubxona yashirin */
+let studentSet = null;
+function enterStudentMode(set) {
+  studentSet = set;
+  document.body.classList.add('student');
+  renderHome(); show('home');
+  toast(`«${set.title}» — o‘ynashga tayyor!`);
 }
 
 /* ======================= YORDAM ======================= */
@@ -1473,16 +1644,17 @@ function showHelp() {
     el('ol', {},
       el('li', { html: 'Maydondagi <b>changli plitkalardan</b> birini bosing.' }),
       el('li', { html: 'Savolga javob bering. <b>To‘g‘ri</b> bo‘lsa, plitka tozalanib, ko‘k naqshli bo‘ladi — u sizniki. <b>Noto‘g‘ri</b> bo‘lsa, plitka yoriladi.' }),
-      el('li', { html: 'Keyin <b>tovuq</b> yuradi: u ham plitka tanlaydi va javobni… tumshug‘i bilan tasodifan choqiydi. Topsa — plitka tovuqniki (to‘q sariq), topmasa — yoriladi.' }),
+      el('li', { html: 'Keyin <b>tovuq</b> yuradi: u ham plitka tanlaydi va javobni tumshug‘i bilan choqiydi (oddiy tovuq — tasodifan, ziyrak va professor tovuq — ko‘pincha to‘g‘ri). Topsa — plitka tovuqniki (to‘q sariq), topmasa — yoriladi.' }),
       el('li', { html: 'Barcha plitkalar ochilguncha navbat bilan davom etadi.' }),
-      el('li', { html: '<b>G‘olibni eng katta yaxlit toza maydon</b> belgilaydi: yonma-yon (yuqori, past, chap, o‘ng) turgan o‘z plitkalaringiz soni. Teng bo‘lsa — jami tozalangan plitkalar, keyin to‘g‘ri javoblar soni hisobga olinadi.' })),
+      el('li', { html: '<b>G‘olibni eng katta yaxlit toza maydon</b> belgilaydi: tepada, pastda, chapda yoki o‘ngda yonma-yon turgan o‘z plitkalaringiz soni. Teng bo‘lsa — jami tozalangan plitkalar soni hisobga olinadi; u ham teng bo‘lsa — durang.' })),
     el('div', { class: 'legend' },
       el('span', {}, el('i', { style: 'background:#ddd6c8' }), 'changli (ochilmagan)'),
       el('span', {}, el('i', { style: 'background:var(--blue)' }), 'sizniki'),
       el('span', {}, el('i', { style: 'background:var(--orange2)' }), 'tovuqniki'),
       el('span', {}, el('i', { style: 'background:#3b3f47' }), 'yorilgan')),
-    el('p', { html: '<b>Maslahat:</b> plitkalarni bir-biriga yaqin tanlang — yaxlit maydoningiz kattalashadi. Tovuqning yo‘lini to‘sib qo‘yish ham mumkin!' }),
-    el('p', { html: '<b>O‘qituvchi uchun:</b> “Savollarni kiritish” bo‘limida istalgan fan bo‘yicha savol yozing (to‘g‘ri/noto‘g‘ri yoki 2–6 variantli test), tayyor matnni ommaviy joylashtiring, JSON faylga saqlang yoki havola orqali ulashing. Klaviatura: <kbd>1</kbd>–<kbd>6</kbd> javob tanlash, <kbd>Enter</kbd> davom etish.' }),
+    el('p', { html: '<b>Maslahat:</b> plitkalarni bir-biriga yaqin tanlang — yaxlit maydoningiz kattalashadi. Tovuq plitkalari orasidagi plitkani egallab, uning maydonini bo‘lib tashlash ham mumkin!' }),
+    el('p', { html: '<b>O‘qituvchi uchun:</b> “Savollarni kiritish” bo‘limida istalgan fan bo‘yicha savol yozing (to‘g‘ri/noto‘g‘ri yoki 2–6 variantli test), tayyor matnni ommaviy joylashtiring, JSON faylga saqlang yoki havola orqali ulashing. Katta ekranda o‘yin sarlavhasidagi <b>A+</b> tugmasi shriftni kattalashtiradi.' }),
+    el('p', { html: '<b>Klaviatura:</b> strelkalar — plitka tanlash, <kbd>Enter</kbd> — ochish, <kbd>1</kbd>–<kbd>6</kbd> — javob, <kbd>Enter</kbd> — davom etish.' }),
     el('div', { class: 'actions' }, el('button', { class: 'btn primary', text: 'Tushunarli', onclick: closeModal }))), { label: 'Yordam' });
 }
 
@@ -1497,13 +1669,26 @@ const CHICKEN_THINK = [
   'Ilmiy maslahatchisiga qo‘ng‘iroq qilmoqchi… telefoni yo‘q.',
   'Ko‘zlarini qisib, ma’noli qarab turibdi…',
 ];
-const CHICKEN_PICK = [
-  '«{x}»ni choqidi. Mutlaqo tasodifan.',
-  'Tumshug‘i bilan «{x}»ni tanladi. Tovuqcha mantiq.',
-  '«{x}»! Hech qanday dalilsiz, lekin qat’iy.',
-  'Uzoq o‘ylab… «{x}»ni choqidi.',
-];
+const CHICKEN_PICK = {
+  random: [
+    '«{x}»ni choqidi. Mutlaqo tasodifan.',
+    'Tumshug‘i bilan «{x}»ni tanladi. Tovuqcha mantiq.',
+    '«{x}»! Hech qanday dalilsiz, lekin qat’iy.',
+    'Uzoq o‘ylab… «{x}»ni choqidi.',
+  ],
+  smart: [
+    '«{x}»ni choqidi — o‘ylab tanlaganga o‘xshaydi.',
+    'Professorona qiyofada «{x}»ni ko‘rsatdi.',
+    'Ishonch bilan «{x}»ni tanladi.',
+    'Darsni tinglagan ekan: «{x}».',
+  ],
+};
 const SKILL_P = { smart: .65, genius: .85 };
+const isSmart = () => G.set.settings.skill !== 'random';
+const turnLabel = () => G.playerName === 'Siz' ? 'Sizning navbatingiz' : `${G.playerName} navbati`;
+// To'g'ri/Noto'g'ri savolda "To'g'ri javob: «Noto'g'ri»" kabi chalkash gap o'rniga
+const tfVerdict = q => q.correctShown === 0 ? 'bu fikr to‘g‘ri' : 'bu fikr noto‘g‘ri';
+function announce(text) { const l = $('#qp-live'); l.textContent = ''; setTimeout(() => { l.textContent = text; }, 30); }
 
 function startGame() {
   const set = curSet(), qs = playable(set);
@@ -1511,7 +1696,8 @@ function startGame() {
   stopTimer(); hidePopup();
   const n = set.settings.grid;
   G = {
-    token: {}, set, qs, n, deck: [], lastQ: null, turn: 'player', busy: false, log: [], active: -1,
+    token: {}, set, qs, n, deck: [], lastQ: null, cycle: 0, turn: 'player', busy: false, log: [], active: -1,
+    answered: null, walkTarget: null, lastTile: -1,
     playerName: (set.playerName || '').trim() || 'Siz',
     tiles: Array.from({ length: n * n }, () => ({ state: 'dusty', motif: rnd(MOTIFS.length) })),
     stats: { p: { ok: 0, n: 0 }, c: { ok: 0, n: 0 } },
@@ -1526,6 +1712,7 @@ function startGame() {
 function buildBoard() {
   const b = $('#board'); b.innerHTML = '';
   b.style.setProperty('--n', G.n);
+  b.inert = false;
   G.tiles.forEach((t, i) => {
     const r = Math.floor(i / G.n) + 1, c = i % G.n + 1;
     const btn = el('button', { class: 'tile dusty', 'data-i': i, 'aria-label': `${r}-qator, ${c}-ustun: changli plitka` },
@@ -1574,9 +1761,17 @@ function setStatus(html, chicken = false) {
 }
 function nextQuestion() {
   if (!G.deck.length) {
-    const idx = G.qs.map((_, i) => i);
-    G.deck = G.set.settings.shuffle ? shuffle(idx) : idx;
-    if (G.deck.length > 1 && G.deck[0] === G.lastQ) G.deck.push(G.deck.shift());
+    let idx = G.qs.map((_, i) => i);
+    if (G.set.settings.shuffle) {
+      idx = shuffle(idx);
+      if (idx.length > 1 && idx[0] === G.lastQ) idx.push(idx.shift());
+    } else if (idx.length % 2 === 0) {
+      // juft sonli savolda o'yinchi va tovuq har doim bir xil savollarni olmasligi uchun
+      // har aylanishda tartibni bir qadam suramiz (savollar tartibi saqlanadi)
+      const r = G.cycle++ % idx.length;
+      idx = idx.slice(r).concat(idx.slice(0, r));
+    }
+    G.deck = idx;
   }
   const qi = G.deck.shift(); G.lastQ = qi;
   const q = G.qs[qi];
@@ -1586,19 +1781,32 @@ function nextQuestion() {
 }
 
 /* ---- o'yinchi navbati ---- */
+function nearestDusty(from) {
+  let best = -1, bd = Infinity;
+  G.tiles.forEach((t, i) => {
+    if (t.state !== 'dusty') return;
+    const d = from < 0 ? i : Math.abs(Math.floor(i / G.n) - Math.floor(from / G.n)) + Math.abs(i % G.n - from % G.n);
+    if (d < bd) { bd = d; best = i; }
+  });
+  return best;
+}
 function playerTurn() {
   if (!G) return;
   if (!tilesLeft()) { endGame(); return; }
-  G.turn = 'player'; G.busy = false; G.active = -1;
+  G.turn = 'player'; G.busy = false; G.active = -1; G.answered = null; G.walkTarget = null;
   $('#board').classList.add('can-pick');
   $('#g-turn').textContent = `Navbat: ${G.playerName}`;
-  setStatus(`${ICON.hand}<span>${G.playerName === 'Siz' ? 'Sizning navbatingiz' : esc(G.playerName) + ' navbati'} — changli plitkani bosing</span>`);
+  setStatus(`${ICON.hand}<span>${esc(turnLabel())} — changli plitkani bosing</span>`);
+  // klaviatura bilan o'ynayotganlar uchun fokusni maydonga qaytaramiz
+  const f = nearestDusty(G.lastTile);
+  if (f >= 0 && (!document.activeElement || document.activeElement === document.body || $('#qpop').contains(document.activeElement) || $('#board').contains(document.activeElement)))
+    tileEl(f).focus({ preventScroll: true });
 }
 $('#board').addEventListener('click', e => {
   const t = e.target.closest('.tile'); if (!t || !G) return;
   const i = +t.dataset.i;
   if (G.turn !== 'player' || G.busy || G.tiles[i].state !== 'dusty') return;
-  G.busy = true; G.active = i;
+  G.busy = true; G.active = i; G.lastTile = i;
   $('#board').classList.remove('can-pick');
   Sound.play('flip');
   tileEl(i).classList.add('open');
@@ -1606,10 +1814,21 @@ $('#board').addEventListener('click', e => {
   setStatus(`<span>Savolga javob bering</span>`);
   showQuestion(i, q, 'player');
 });
+// strelkalar bilan plitkalar bo'ylab yurish
+$('#board').addEventListener('keydown', e => {
+  const t = e.target.closest('.tile'); if (!t || !G) return;
+  const d = { ArrowUp: -G.n, ArrowDown: G.n, ArrowLeft: -1, ArrowRight: 1 }[e.key]; if (!d) return;
+  const i = +t.dataset.i, j = i + d;
+  if (j < 0 || j >= G.tiles.length || (Math.abs(d) === 1 && Math.floor(j / G.n) !== Math.floor(i / G.n))) return;
+  e.preventDefault(); tileEl(j).focus();
+});
 
 function showQuestion(i, q, who) {
   const pop = $('#qpop');
   pop.classList.remove('show');
+  pop.inert = false;
+  pop.dataset.side = '';
+  $('#qp-scroll').scrollTop = 0;
   $('#qp-label').innerHTML = who === 'player'
     ? `<i class="who" style="background:var(--blue)"></i>${q.type === 'tf' ? 'To‘g‘ri yoki noto‘g‘ri?' : 'Savol'}`
     : `<i class="who" style="background:var(--orange2)"></i>Tovuq ochdi`;
@@ -1624,56 +1843,104 @@ function showQuestion(i, q, who) {
   });
   ['#qp-note', '#qp-result', '#qp-exp', '#qp-foot'].forEach(s => $(s).hidden = true);
   $('#qp-timer').hidden = $('#qp-timer-txt').hidden = true;
-  pop.setAttribute('aria-modal', who === 'player' ? 'true' : 'false');
+  // vaqt chizig'i o'lchamga ta'sir qiladi — joylashtirishdan oldin ko'rsatamiz
+  if (who === 'player' && G.set.settings.timer > 0) startTimer(G.set.settings.timer);
   placePopup(i);
+  if (who === 'player') $('#board').inert = true;
   requestAnimationFrame(() => pop.classList.add('show'));
   if (who === 'player') {
     setTimeout(() => { const f = opts.querySelector('button'); if (f && G && G.active === i) f.focus({ preventScroll: true }); }, 60);
-    if (G.set.settings.timer > 0) startTimer(G.set.settings.timer);
   }
 }
-function hidePopup() { const p = $('#qpop'); p.classList.remove('show'); }
+function hidePopup() {
+  const p = $('#qpop');
+  if (p.contains(document.activeElement)) document.activeElement.blur();
+  p.classList.remove('show');
+  p.inert = true;
+  $('#qp-foot').hidden = true;
+  $('#qp-next').onclick = null;
+  $('#board').inert = false;
+}
 
-/* savol oynasini plitka yoniga joylash */
-function placePopup(i) {
+/* savol oynasini plitka yoniga joylash; keep — javobdan keyin tomonini o'zgartirmaslik */
+function placePopup(i, keep) {
   const pop = $('#qpop'), t = tileEl(i); if (!t) return;
-  pop.classList.remove('side-top', 'side-bottom', 'side-left', 'side-right', 'sheet', 'center');
+  const prevSide = keep ? pop.dataset.side : '';
+  pop.classList.remove('side-top', 'side-bottom', 'side-left', 'side-right', 'sheet', 'sheet-top', 'center', 'dock');
+  pop.style.width = '';
   const vw = window.innerWidth, vh = window.innerHeight, m = 10, gap = 16;
+  const r = t.getBoundingClientRect();
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  // telefon yotiq holatda: maydon yonidagi bo'sh joyga
+  if (vh < 500 && vw > vh) {
+    const br = $('#board').getBoundingClientRect(), free = vw - br.right - 2 * m;
+    if (free >= 260) {
+      pop.classList.add('dock'); pop.dataset.side = 'dock';
+      pop.style.width = Math.min(free, 560) + 'px'; pop.style.left = (br.right + m) + 'px'; pop.style.top = m + 'px';
+      return;
+    }
+  }
   if (vw < 720) {
-    pop.classList.add('sheet');
+    pop.classList.add('sheet'); pop.dataset.side = 'sheet';
+    // plitka pastki yarmida bo'lsa — oyna tepada, tovuq va plitka ko'rinib tursin
+    pop.classList.toggle('sheet-top', r.top + r.height / 2 > vh / 2);
     pop.style.left = ''; pop.style.top = '';
     return;
   }
-  pop.style.left = '0px'; pop.style.top = '0px';
-  const pw = pop.offsetWidth, ph = pop.offsetHeight, r = t.getBoundingClientRect();
-  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  const cands = [
-    { side: 'top', x: clamp(cx - pw / 2, m, vw - pw - m), y: r.top - ph - gap, ok: r.top - ph - gap >= m },
-    { side: 'right', x: r.right + gap, y: clamp(cy - ph / 2, m, vh - ph - m), ok: r.right + gap + pw <= vw - m },
-    { side: 'left', x: r.left - pw - gap, y: clamp(cy - ph / 2, m, vh - ph - m), ok: r.left - pw - gap >= m },
-    { side: 'bottom', x: clamp(cx - pw / 2, m, vw - pw - m), y: r.bottom + gap, ok: r.bottom + gap + ph <= vh - m },
-  ];
-  const c = cands.find(k => k.ok);
-  if (!c || ph > vh - 2 * m) { pop.classList.add('center'); pop.style.left = ''; pop.style.top = ''; return; }
-  pop.classList.add('side-' + c.side);
+  // oyna sarlavhadagi tugmalarni (qaytadan boshlash, chiqish…) yopmasligi uchun yuqori chegara
+  const top0 = Math.max(m, $('#stage').getBoundingClientRect().top);
+  const measure = w => {
+    pop.style.width = w ? w + 'px' : '';
+    pop.style.left = '0px'; pop.style.top = '0px';
+    const pw = pop.offsetWidth, ph = pop.offsetHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    return {
+      pw, ph, cx, cy,
+      top: { x: clamp(cx - pw / 2, m, vw - pw - m), y: r.top - ph - gap, ok: r.top - ph - gap >= top0, fy: clamp(r.top - ph - gap, top0, vh - ph - m) },
+      right: { x: r.right + gap, y: clamp(cy - ph / 2, top0, vh - ph - m), ok: r.right + gap + pw <= vw - m },
+      left: { x: r.left - pw - gap, y: clamp(cy - ph / 2, top0, vh - ph - m), ok: r.left - pw - gap >= m },
+      bottom: { x: clamp(cx - pw / 2, m, vw - pw - m), y: r.bottom + gap, ok: r.bottom + gap + ph <= vh - m, fy: clamp(r.bottom + gap, top0, vh - ph - m) },
+    };
+  };
+  const SIDES = ['top', 'right', 'left', 'bottom'];
+  let L = measure(0), side = null;
+  if (prevSide && L[prevSide] && L.ph <= vh - top0 - m) {
+    side = prevSide;
+    // oyna kattalashib sig'may qolsa ham shu tomonda qoladi (sakramaydi), biroz ustma-ust tushadi
+    if (!L[side].ok) { if (L[side].fy != null) L[side].y = L[side].fy; else L[side].x = clamp(L[side].x, m, vw - L.pw - m); }
+  } else side = SIDES.find(s => L[s].ok) || null;
+  if (!side) {
+    // yon tomonda torroq oyna sig'adimi?
+    const freeR = vw - r.right - gap - m, freeL = r.left - gap - m, w = Math.min(470, Math.max(freeR, freeL));
+    if (w >= 300) { L = measure(w); side = ['right', 'left'].find(s => L[s].ok) || null; }
+  }
+  if (!side || L.ph > vh - top0 - m) {
+    pop.classList.add('center'); pop.dataset.side = 'center'; pop.style.left = ''; pop.style.top = '';
+    return;
+  }
+  const c = L[side];
+  pop.classList.add('side-' + side); pop.dataset.side = side;
   pop.style.left = c.x + 'px'; pop.style.top = c.y + 'px';
-  if (c.side === 'top' || c.side === 'bottom') pop.style.setProperty('--ax', clamp(cx - c.x, 24, pw - 24) + 'px');
-  else pop.style.setProperty('--ay', clamp(cy - c.y, 24, ph - 24) + 'px');
+  if (side === 'top' || side === 'bottom') pop.style.setProperty('--ax', clamp(L.cx - c.x, 24, L.pw - 24) + 'px');
+  else pop.style.setProperty('--ay', clamp(L.cy - c.y, 24, L.ph - 24) + 'px');
 }
-function repositionPopup() { if (G && G.active >= 0 && $('#qpop').classList.contains('show')) placePopup(G.active); }
+function repositionPopup() { if (G && G.active >= 0 && $('#qpop').classList.contains('show')) placePopup(G.active, true); }
 
-/* vaqt hisoblagich */
+/* vaqt hisoblagich (oyna — masalan, "Qaytadan boshlaysizmi?" — ochiq turganda to'xtaydi) */
 let timerRAF = null, timerEnd = 0, timerLastSec = -1;
 function startTimer(sec) {
   stopTimer();
   const bar = $('#qp-timer'), txt = $('#qp-timer-txt'), fill = bar.querySelector('i');
   bar.hidden = txt.hidden = false; bar.classList.remove('low');
+  fill.style.transform = 'scaleX(1)'; txt.textContent = `${sec} s qoldi`;
   timerEnd = performance.now() + sec * 1000; timerLastSec = -1;
   const token = G.token;
+  let last = performance.now();
   const step = () => {
     if (!G || G.token !== token) return;
-    const left = Math.max(0, timerEnd - performance.now()), s = Math.ceil(left / 1000);
+    const now = performance.now();
+    if ($('#modal-root').firstChild || document.hidden) timerEnd += now - last;
+    last = now;
+    const left = Math.max(0, timerEnd - now), s = Math.ceil(left / 1000);
     fill.style.transform = `scaleX(${left / (sec * 1000)})`;
     if (s !== timerLastSec) { timerLastSec = s; txt.textContent = `${s} s qoldi`; if (s <= 5 && s > 0) { bar.classList.add('low'); Sound.play('tick'); } }
     if (left <= 0) { timerRAF = null; answerPlayer(null); return; }
@@ -1684,10 +1951,11 @@ function startTimer(sec) {
 function stopTimer() { if (timerRAF) cancelAnimationFrame(timerRAF); timerRAF = null; }
 
 function markOptions(q, chosen, chickenPick) {
+  const tf = q.type === 'tf';
   $$('#qp-opts .qp-opt').forEach((b, k) => {
     b.disabled = true; b.onclick = null;
-    if (k === q.correctShown) { b.classList.add('correct'); b.insertAdjacentHTML('beforeend', '<span class="tag">✓ to‘g‘ri javob</span>'); }
-    else if (k === chosen) { b.classList.add('wrong'); b.insertAdjacentHTML('beforeend', `<span class="tag">✕ ${chickenPick ? 'tovuq tanladi' : 'sizning javobingiz'}</span>`); }
+    if (k === q.correctShown) { b.classList.add('correct'); b.insertAdjacentHTML('beforeend', `<span class="tag">✓ ${tf ? 'shunisi to‘g‘ri' : 'to‘g‘ri javob'}</span>`); }
+    else if (k === chosen) { b.classList.add('wrong'); b.insertAdjacentHTML('beforeend', `<span class="tag">✕ ${chickenPick ? 'tovuq tanladi' : 'javobingiz'}</span>`); }
     else b.classList.add('dim');
     if (chickenPick && k === chosen) b.classList.add('picked-chicken');
   });
@@ -1700,12 +1968,17 @@ function showExplain(q) {
   if (q.explain) { e.innerHTML = '<b>Izoh:</b> '; e.append(document.createTextNode(q.explain)); e.hidden = false; }
 }
 function showNext(label, fn) {
-  const f = $('#qp-foot'), b = $('#qp-next');
+  const f = $('#qp-foot'), b = $('#qp-next'), token = G.token;
   b.textContent = label; f.hidden = false;
-  b.onclick = () => { b.onclick = null; Sound.play('click'); fn(); };
-  placePopup(G.active);
-  setTimeout(() => b.focus({ preventScroll: true }), 50);
+  b.onclick = () => { b.onclick = null; if (!G || G.token !== token) return; Sound.play('click'); fn(); };
+  placePopup(G.active, true);
+  // uzun savolda natija va tugma pastda qolib ketmasin
+  const target = !$('#qp-exp').hidden ? $('#qp-exp') : $('#qp-result');
+  target.scrollIntoView({ block: 'nearest' });
+  setTimeout(() => { if (b.onclick) b.focus({ preventScroll: true }); }, 50);
 }
+function correctText(q) { return q.type === 'tf' ? `Aslida ${tfVerdict(q)}.` : `To‘g‘ri javob: «${esc(q.shown[q.correctShown])}».`; }
+const plain = html => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent; };
 
 function answerPlayer(k) {
   if (!G || G.turn !== 'player' || G.active < 0 || G.answered === G.active) return;
@@ -1715,10 +1988,12 @@ function answerPlayer(k) {
   $('#qp-timer').hidden = $('#qp-timer-txt').hidden = true;
   markOptions(q, k, false);
   G.stats.p.n++; if (ok) G.stats.p.ok++;
-  G.log.push({ who: 'p', text: q.text, chosen: k == null ? null : q.shown[k], correct: q.shown[q.correctShown], ok, timeout: k == null });
-  if (ok) showResult('ok', '✓ Barakalla! To‘g‘ri javob — plitka sizniki.');
-  else if (k == null) showResult('bad', `⏱ Vaqt tugadi! To‘g‘ri javob: «${esc(q.shown[q.correctShown])}».`);
-  else showResult('bad', `✕ Afsuski, noto‘g‘ri. To‘g‘ri javob: «${esc(q.shown[q.correctShown])}».`);
+  G.log.push({ who: 'p', type: q.type, text: q.text, chosen: k == null ? null : q.shown[k], correct: q.shown[q.correctShown], verdict: q.type === 'tf' ? tfVerdict(q) : '', ok, timeout: k == null });
+  let msg;
+  if (ok) msg = `✓ Barakalla! To‘g‘ri javob — plitka ${G.playerName === 'Siz' ? 'sizniki' : esc(G.playerName) + 'niki'}.`;
+  else if (k == null) msg = `⏱ Vaqt tugadi! ${correctText(q)}`;
+  else msg = `✕ Afsuski, xato. ${correctText(q)}`;
+  showResult(ok ? 'ok' : 'bad', msg);
   showExplain(q);
   resolveTile(i, ok ? 'p' : 'x');
   setStatus(ok ? '<span>Ajoyib! Plitka tozalandi ✨</span>' : '<span>Plitka yorildi…</span>');
@@ -1731,6 +2006,7 @@ function answerPlayer(k) {
 function resolveTile(i, st) {
   const e = tileEl(i);
   G.tiles[i].state = st; // mantiqiy holat darhol, ko'rinish — aylanish animatsiyasidan keyin
+  e.classList.remove('dusty'); // ochilgan plitka endi tanlanmaydi va hover bo'lmaydi
   setTimeout(() => {
     if (!G || !e.isConnected) return;
     paintTile(i);
@@ -1748,9 +2024,11 @@ function chickenSize() {
   return Math.max(64, Math.min(130, w * 1.05));
 }
 function homePoint() {
-  const wrap = $('#board-wrap').getBoundingClientRect(), s = chickenSize();
-  if (wrap.right + s * 0.85 < window.innerWidth) return { x: wrap.width + 4, y: wrap.height - s * 0.92 };
-  return { x: wrap.width - s * 0.95, y: wrap.height - s * 0.35 };
+  const wrap = $('#board-wrap').getBoundingClientRect(), s = chickenSize(), vw = window.innerWidth;
+  // maydonning o'ng tomonida joy bo'lsa — o'sha yerda, ekrandan chiqib ketmasdan
+  if (wrap.right + s * 0.6 < vw) return { x: Math.min(wrap.width + 4, vw - wrap.left - s - 4), y: wrap.height - s * 0.92 };
+  // tor ekranda — o'ng pastki burchakdan biroz pastga
+  return { x: wrap.width - s * 0.8, y: wrap.height - s * 0.45 };
 }
 function tilePoint(i) {
   const wrap = $('#board-wrap').getBoundingClientRect(), r = tileEl(i).getBoundingClientRect(), s = chickenSize();
@@ -1763,9 +2041,10 @@ function setChicken(p, ms) {
   c.style.transform = `translate(${p.x}px, ${p.y}px)`;
   chickenPos = p;
 }
-function placeChickenHome(instant) { const c = $('#chicken'); c.className = ''; setChicken(homePoint(), instant ? 0 : 600); G && (G.chickenAt = 'home'); }
+function placeChickenHome(instant) { const c = $('#chicken'); c.className = ''; setChicken(homePoint(), instant ? 0 : 600); }
+let walkSeq = 0;
 async function walkTo(p, token) {
-  const c = $('#chicken');
+  const c = $('#chicken'), seq = ++walkSeq;
   const dx = p.x - chickenPos.x, dy = p.y - chickenPos.y, dist = Math.hypot(dx, dy);
   if (Math.abs(dx) > 4) c.classList.toggle('face-left', dx < 0);
   const ms = Math.max(350, Math.min(1500, dist / 0.28));
@@ -1774,7 +2053,7 @@ async function walkTo(p, token) {
   const steps = Math.floor(ms / 320);
   for (let k = 0; k < steps; k++) setTimeout(() => { if (G && G.token === token) Sound.play('step'); }, k * 320);
   await sleep(ms + 30);
-  c.classList.remove('walking');
+  if (seq === walkSeq) c.classList.remove('walking'); // keyingi yurish boshlangan bo'lsa, uni to'xtatmaymiz
 }
 function chooseChickenTile() {
   const n = G.n, free = [];
@@ -1805,7 +2084,9 @@ async function chickenTurn() {
   await sleep(450); if (!alive()) return;
   const i = chooseChickenTile();
   if (i == null) { endGame(); return; }
+  G.walkTarget = i;
   await walkTo(tilePoint(i), token); if (!alive()) return;
+  setChicken(tilePoint(i), 0); // yurish paytida oyna o'lchami o'zgargan bo'lsa
   G.active = i;
   c.classList.add('peck'); Sound.play('peck');
   await sleep(500); if (!alive()) return;
@@ -1815,6 +2096,7 @@ async function chickenTurn() {
   showQuestion(i, q, 'chicken');
   const note = $('#qp-note'); note.textContent = CHICKEN_THINK[rnd(CHICKEN_THINK.length)]; note.hidden = false;
   placePopup(i);
+  announce('Tovuq ochgan savol: ' + q.text);
   c.classList.add('think');
   await sleep(1700); if (!alive()) return;
   c.classList.remove('think');
@@ -1822,21 +2104,24 @@ async function chickenTurn() {
   c.classList.add('peck'); Sound.play('peck');
   const btn = $$('#qp-opts .qp-opt')[k];
   if (btn) btn.classList.add('picked-chicken');
-  note.textContent = CHICKEN_PICK[rnd(CHICKEN_PICK.length)].replace('{x}', q.shown[k]);
+  const lines = CHICKEN_PICK[isSmart() ? 'smart' : 'random'];
+  note.textContent = lines[rnd(lines.length)].replace('{x}', q.shown[k]);
   await sleep(1300); if (!alive()) return;
   c.classList.remove('peck');
   const ok = k === q.correctShown;
   markOptions(q, k, true);
   G.stats.c.n++; if (ok) G.stats.c.ok++;
-  G.log.push({ who: 'c', text: q.text, chosen: q.shown[k], correct: q.shown[q.correctShown], ok });
-  if (ok) { showResult('neutral', '🐔 Tovuq topdi! Plitka tovuqqa o‘tdi.'); c.classList.add('happy'); setTimeout(() => c.classList.remove('happy'), 950); Sound.play('cluck'); }
-  else showResult('ok', `Tovuq adashdi — plitka yorildi. To‘g‘ri javob: «${esc(q.shown[q.correctShown])}».`);
+  G.log.push({ who: 'c', type: q.type, text: q.text, chosen: q.shown[k], correct: q.shown[q.correctShown], verdict: q.type === 'tf' ? tfVerdict(q) : '', ok });
+  let msg;
+  if (ok) { msg = '🐔 Tovuq topdi! Plitka tovuqqa o‘tdi.'; showResult('neutral', msg); c.classList.add('happy'); setTimeout(() => c.classList.remove('happy'), 950); Sound.play('cluck'); }
+  else { msg = `Tovuq adashdi — plitka yorildi. ${correctText(q)}`; showResult('ok', msg); }
   showExplain(q);
+  announce(plain(note.textContent + ' ' + msg) + (q.explain ? ' Izoh: ' + q.explain : ''));
   resolveTile(i, ok ? 'c' : 'x');
-  setStatus(ok ? '<span>Tovuq omadli chiqdi…</span>' : '<span>Tovuq adashdi!</span>', true);
+  setStatus(ok ? `<span>${isSmart() ? 'Tovuq yana topdi…' : 'Tovuq omadli chiqdi…'}</span>` : '<span>Tovuq adashdi!</span>', true);
   const left = tilesLeft();
   G.busy = false;
-  showNext(left ? 'Mening navbatim →' : 'Natijalarni ko‘rish →', () => {
+  showNext(left ? `${turnLabel()} →` : 'Natijalarni ko‘rish →', () => {
     hidePopup();
     if (!alive()) return;
     if (!left) { endGame(); return; }
@@ -1846,21 +2131,24 @@ async function chickenTurn() {
 }
 
 /* ---- o'yin oxiri ---- */
+let lastResultText = '';
 function endGame() {
   if (!G) return;
   stopTimer(); hidePopup();
   const rp = largestRegion('p'), rc = largestRegion('c');
   const tp = G.tiles.filter(t => t.state === 'p').length, tc = G.tiles.filter(t => t.state === 'c').length;
   const { p, c } = G.stats;
+  // Har bir to'g'ri javob bitta plitka beradi, shuning uchun plitkalar teng bo'lsa — durang.
+  // (Foizni solishtirish toq maydonda doim tovuq foydasiga hal qilardi: o'yinchi bitta ko'p savolga javob beradi.)
   let winner = 0; // 1 — o'yinchi, -1 — tovuq
   if (rp.length !== rc.length) winner = rp.length > rc.length ? 1 : -1;
   else if (tp !== tc) winner = tp > tc ? 1 : -1;
-  else if (p.ok / Math.max(1, p.n) !== c.ok / Math.max(1, c.n)) winner = p.ok / Math.max(1, p.n) > c.ok / Math.max(1, c.n) ? 1 : -1;
-  const you = G.playerName === 'Siz';
-  $('#res-title').textContent = winner > 0 ? (you ? 'Siz tovuqdan aqllisiz! 🎉' : `${G.playerName} tovuqdan aqlli! 🎉`)
-    : winner < 0 ? 'Bu safar tovuq yutdi… 🐔' : 'Durang! Tovuq bilan teng kuchlisiz.';
-  $('#res-sub').textContent = winner > 0 ? 'Bilim tasodifdan ustun keldi. Barakalla!'
-    : winner < 0 ? 'Tovuq hech narsa o‘qimagan, lekin omadi chopdi. Savollarni takrorlab, qayta urinib ko‘ring!'
+  const you = G.playerName === 'Siz', smart = isSmart();
+  const title = winner > 0 ? (you ? 'Siz tovuqdan aqllisiz! 🎉' : `${G.playerName} tovuqdan aqlli! 🎉`)
+    : winner < 0 ? 'Bu safar tovuq yutdi… 🐔' : (you ? 'Durang! Tovuq bilan teng kuchlisiz.' : `Durang! ${G.playerName} va tovuq teng kuchli.`);
+  $('#res-title').textContent = title;
+  $('#res-sub').textContent = winner > 0 ? (smart ? 'Bilimingiz ziyrak tovuqdan ham ustun keldi. Barakalla!' : 'Bilim tasodifdan ustun keldi. Barakalla!')
+    : winner < 0 ? (smart ? 'Bu tovuq darsni yaxshi o‘qigan ekan! Savollarni takrorlab, qayta urinib ko‘ring.' : 'Tovuq hech narsa o‘qimagan, lekin omadi chopdi. Savollarni takrorlab, qayta urinib ko‘ring!')
       : 'Juda yaqin bellashuv bo‘ldi. Yana bir bor?';
   $('#res-pname').textContent = G.playerName;
   const pct = s => s.n ? `${s.ok}/${s.n} (${Math.round(100 * s.ok / s.n)}%)` : '—';
@@ -1868,22 +2156,33 @@ function endGame() {
   $('#res-stats').innerHTML =
     row('Eng katta yaxlit maydon', rp.length, rc.length, rp.length, rc.length) +
     row('Tozalangan plitkalar', tp, tc, tp, tc) +
-    row('To‘g‘ri javoblar', pct(p), pct(c), p.ok / Math.max(1, p.n), c.ok / Math.max(1, c.n));
+    row('To‘g‘ri javoblar', pct(p), pct(c), p.ok, c.ok);
   const mb = $('#res-board'); mb.innerHTML = ''; mb.style.gridTemplateColumns = `repeat(${G.n},1fr)`;
-  const hl = new Set(winner >= 0 ? rp : rc);
+  const hl = new Set(winner > 0 ? rp : winner < 0 ? rc : [...rp, ...rc]);
   G.tiles.forEach((t, i) => mb.append(el('i', { class: 'mt ' + t.state + (hl.has(i) ? ' hl' : '') })));
   const rv = $('#res-review'); rv.innerHTML = '';
+  const initial = (G.playerName[0] || 'S').toUpperCase();
   G.log.forEach(l => {
     const a = el('div', { class: 'a' });
     a.append(document.createTextNode(l.who === 'p' ? 'Javob: ' : 'Tovuq: '));
     a.append(el('span', { class: l.ok ? 'ok' : 'bad', text: l.timeout ? 'vaqt tugadi' : l.chosen }));
-    if (!l.ok) a.append(document.createTextNode(' · to‘g‘ri javob: ' + l.correct));
-    rv.append(el('li', {}, el('span', { class: 'who ' + l.who, text: l.who === 'p' ? 'S' : 'T', title: l.who === 'p' ? G.playerName : 'Tovuq' }), el('div', {}, el('div', { class: 'q', text: l.text }), a)));
+    if (!l.ok) a.append(document.createTextNode(l.type === 'tf' ? ' · aslida: ' + l.verdict : ' · to‘g‘ri javob: ' + l.correct));
+    rv.append(el('li', {}, el('span', { class: 'who ' + l.who, text: l.who === 'p' ? initial : 'T', title: l.who === 'p' ? G.playerName : 'Tovuq' }), el('div', {}, el('div', { class: 'q', text: l.text }), a)));
   });
+  // o'qituvchi uchun matnli hisobot
+  const missed = G.log.filter(l => l.who === 'p' && !l.ok);
+  lastResultText = [
+    `«Tovuqdan aqllimisiz?» — ${[G.set.title, G.set.subject].filter(Boolean).join(', ')}`,
+    `Natija: ${title.replace(/\s*[🎉🐔]/gu, '')}`,
+    `${G.playerName}: eng katta maydon ${rp.length}, plitkalar ${tp}, to‘g‘ri javoblar ${pct(p)}`,
+    `Tovuq: eng katta maydon ${rc.length}, plitkalar ${tc}, to‘g‘ri javoblar ${pct(c)}`,
+    missed.length ? `Xato javob berilgan savollar:\n` + missed.map((l, k) => `${k + 1}. ${l.text} — ${l.type === 'tf' ? l.verdict : 'to‘g‘ri javob: ' + l.correct}`).join('\n') : 'Barcha savollarga to‘g‘ri javob berildi.',
+  ].join('\n');
   const rc2 = $('.res-chicken');
   rc2.style.transform = winner < 0 ? 'scaleX(-1)' : '';
   G.turn = 'over';
   show('result');
+  setTimeout(() => $('#res-again').focus({ preventScroll: true }), 50);
   if (winner > 0) { Sound.play('win'); confetti(); } else if (winner < 0) Sound.play('lose'); else Sound.play('correct');
 }
 function confetti() {
@@ -1913,6 +2212,11 @@ $('#g-close').onclick = async () => {
   stopTimer(); hidePopup(); G = null; renderHome(); show('home');
 };
 $('#g-sound').onclick = () => { store.sound = !Sound.on; saveStore(true); updateHud(); if (Sound.on) Sound.play('click'); };
+function applyBig() {
+  document.body.classList.toggle('big', !!store.big);
+  $('#g-big').setAttribute('aria-pressed', String(!!store.big));
+}
+$('#g-big').onclick = () => { store.big = !store.big; saveStore(true); applyBig(); repositionPopup(); };
 $('#g-full').onclick = () => {
   try {
     if (document.fullscreenElement) document.exitFullscreen();
@@ -1922,6 +2226,13 @@ $('#g-full').onclick = () => {
 $('#res-again').onclick = () => startGame();
 $('#res-edit').onclick = () => openEditor();
 $('#res-home').onclick = () => { renderHome(); show('home'); };
+$('#res-copy').onclick = async () => {
+  if (await copyText(lastResultText)) { toast('Natija nusxalandi — uni jurnal yoki guruh chatiga joylashingiz mumkin'); return; }
+  const ta = el('textarea', { class: 'inp', rows: 10, readonly: true, 'aria-label': 'Natija matni' }); ta.value = lastResultText;
+  openModal(el('div', {}, el('h2', { text: 'Natija matni' }), el('p', { text: 'Matnni belgilab, Ctrl+C bilan nusxa oling.' }), ta,
+    el('div', { class: 'actions' }, el('button', { class: 'btn primary', text: 'Yopish', onclick: closeModal }))), { label: 'Natija' });
+  setTimeout(() => { ta.focus(); ta.select(); }, 40);
+};
 
 document.addEventListener('keydown', e => {
   if (screen !== 'game' || !G || $('#modal-root').firstChild) return;
@@ -1931,7 +2242,10 @@ document.addEventListener('keydown', e => {
   if (/^[1-6]$/.test(e.key) && G.turn === 'player' && G.answered == null) {
     const b = $$('#qp-opts .qp-opt')[+e.key - 1];
     if (b && !b.disabled) { e.preventDefault(); b.click(); }
-  } else if (e.key === 'Enter' && !$('#qp-foot').hidden && document.activeElement !== $('#qp-next')) {
+  } else if (e.key === 'Enter' && !$('#qp-foot').hidden) {
+    // boshqa tugma (ovoz, chiqish…) fokusda bo'lsa, Enter o'sha tugmaga tegishli
+    const a = document.activeElement;
+    if (a === $('#qp-next') || !(a === document.body || pop.contains(a))) return;
     e.preventDefault(); $('#qp-next').click();
   }
 });
@@ -1942,7 +2256,10 @@ window.addEventListener('resize', () => {
     if (screen !== 'game' || !G) return;
     repositionPopup();
     if (G.turn === 'player' || G.turn === 'over') setChicken(homePoint(), 0);
-    else if (G.active >= 0) setChicken(tilePoint(G.active), 0);
+    else {
+      const t = G.active >= 0 ? G.active : G.walkTarget;
+      if (t != null && t >= 0) setChicken(tilePoint(t), 0);
+    }
   });
 });
 // birinchi bosishda audio kontekstni ochish (brauzer siyosati)
@@ -1951,6 +2268,7 @@ document.addEventListener('pointerdown', () => { if (Sound.on) Sound.ensure(); }
 /* ---------------------- ishga tushirish ---------------------- */
 // tovuqning boshi alohida animatsiya qilinishi uchun rasm <use> emas, bevosita joylanadi
 $('#chicken svg').innerHTML = $('#chicken-art').innerHTML;
+applyBig();
 renderHome();
 loadFromHash();
 window.addEventListener('hashchange', loadFromHash);
